@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.lucene.document.NumericDocValuesField;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexableField;
 import org.apache.lucene.index.Term;
@@ -14,6 +15,12 @@ import org.apache.solr.update.UpdateHandler;
 import org.apache.solr.util.RefCounted;
 
 public class FessDirectUpdateHandler extends DirectUpdateHandler2 {
+
+    private static final String TERM_PARAM = "term";
+
+    private static final String EXTENDED_CMD = "excmd";
+
+    private static final String UPDATE_CMD = "update";
 
     public FessDirectUpdateHandler(final SolrCore core) {
         super(core);
@@ -26,9 +33,9 @@ public class FessDirectUpdateHandler extends DirectUpdateHandler2 {
 
     @Override
     public int addDoc(final AddUpdateCommand cmd) throws IOException {
-        final String exCmd = cmd.getReq().getParams().get("excmd");
-        if ("update".equals(exCmd)) {
-            final String termName = cmd.getReq().getParams().get("term");
+        final String exCmd = cmd.getReq().getParams().get(EXTENDED_CMD);
+        if (UPDATE_CMD.equals(exCmd)) {
+            final String termName = cmd.getReq().getParams().get(TERM_PARAM);
             if (termName == null) {
                 throw new IllegalArgumentException("term is not specified.");
             }
@@ -64,9 +71,9 @@ public class FessDirectUpdateHandler extends DirectUpdateHandler2 {
         String termValue = null;
         final List<IndexableField> numericFieldList = new ArrayList<IndexableField>();
         for (final IndexableField field : doc) {
-            if (termName.equals(field.name())) {
+            if (termName.equals(field.name()) && field.stringValue() != null) {
                 termValue = field.stringValue();
-            } else if (field.numericValue() != null) {
+            } else if (field instanceof NumericDocValuesField) {
                 numericFieldList.add(field);
             }
         }
