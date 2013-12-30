@@ -9,8 +9,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import org.apache.lucene.analysis.Tokenizer;
 import org.apache.lucene.analysis.util.ResourceLoader;
@@ -18,6 +16,7 @@ import org.apache.lucene.analysis.util.ResourceLoaderAware;
 import org.apache.lucene.analysis.util.TokenizerFactory;
 import org.apache.lucene.util.AttributeSource;
 import org.apache.lucene.util.AttributeSource.AttributeFactory;
+import org.apache.solr.core.SolrResourceLoader;
 
 public class MonitoringTokenizerFactory extends TokenizerFactory implements
         ResourceLoaderAware {
@@ -54,6 +53,8 @@ public class MonitoringTokenizerFactory extends TokenizerFactory implements
 
     protected final Map<String, String> baseArgs;
 
+    protected Map<String, String> monitorArgs;
+
     protected final String baseClass;
 
     protected Timer monitorTimer;
@@ -71,14 +72,6 @@ public class MonitoringTokenizerFactory extends TokenizerFactory implements
     public MonitoringTokenizerFactory(final Map<String, String> args) {
         super(args);
 
-        baseArgs = new HashMap<String, String>(args);
-        baseClass = baseArgs.remove(BASE_CLASS);
-        baseArgs.put(CLASS, baseClass);
-        baseArgs.put(LUCENE_MATCH_VERSION_PARAM, luceneMatchVersion.toString());
-
-        monitorTimer = createMonitorTimer();
-        baseTokenizerFactory = createTokenizerFactory();
-
         try {
             inputPendingField = Tokenizer.class
                     .getDeclaredField("inputPending");
@@ -95,11 +88,22 @@ public class MonitoringTokenizerFactory extends TokenizerFactory implements
         } catch (final Exception e) {
             throw new IllegalStateException("Failed to load fields.", e);
         }
+
+        baseArgs = new HashMap<String, String>(args);
+        monitorArgs = new HashMap<String, String>();
+
+        baseClass = baseArgs.remove(BASE_CLASS);
+        baseArgs.put(CLASS, baseClass);
+        baseArgs.put(LUCENE_MATCH_VERSION_PARAM, luceneMatchVersion.toString());
+
+        createMonitorParams();
+        baseTokenizerFactory = createTokenizerFactory();
     }
 
     @Override
     public void inform(final ResourceLoader loader) throws IOException {
         this.loader = loader;
+        monitorTimer = createMonitorTimer();
 
         if (baseTokenizerFactory instanceof ResourceLoaderAware) {
             ((ResourceLoaderAware) baseTokenizerFactory).inform(loader);
@@ -138,10 +142,23 @@ public class MonitoringTokenizerFactory extends TokenizerFactory implements
         }
     }
 
+    protected void createMonitorParams() {
+        monitorArgs.put(MONITORING_FILE, baseArgs.remove(MONITORING_FILE));
+        monitorArgs.put(MONITORING_PERIOD, baseArgs.remove(MONITORING_PERIOD));
+    }
+
     protected Timer createMonitorTimer() {
-        final File monitoringFile = new File(
-                resolve(baseArgs.remove(MONITORING_FILE)));
-        final String monitoringPeriodStr = baseArgs.remove(MONITORING_PERIOD);
+        final File monitoringFile;
+        final String monitoringFilePath = monitorArgs.get(MONITORING_FILE);
+        final File file = new File(monitoringFilePath);
+        if (file.exists()) {
+            monitoringFile = file;
+        } else {
+            monitoringFile = new File(
+                    ((SolrResourceLoader) loader).getConfigDir(),
+                    monitoringFilePath);
+        }
+        final String monitoringPeriodStr = monitorArgs.get(MONITORING_PERIOD);
         final long monitoringPeriod = monitoringPeriodStr == null ? DEFAULT_TIMER_PERIOD
                 : Long.parseLong(monitoringPeriodStr);
         final long currentTime = monitoringFile.lastModified();
@@ -149,6 +166,7 @@ public class MonitoringTokenizerFactory extends TokenizerFactory implements
             System.out.println("Starting a timer(" + monitoringPeriod
                     + "ms) to monitor " + monitoringFile.getAbsolutePath());
         }
+        monitorArgs = null;
 
         final TimerTask task = new TimerTask() {
             long timestamp = currentTime;
@@ -186,28 +204,6 @@ public class MonitoringTokenizerFactory extends TokenizerFactory implements
             monitorTimer.cancel();
         }
         super.finalize();
-    }
-
-    protected static String resolve(final String value) {
-        if (value == null) {
-            return null;
-        }
-
-        final StringBuffer tunedText = new StringBuffer(value.length());
-        final Pattern pattern = Pattern.compile("(\\$\\{([\\w\\.]+)\\})");
-        final Matcher matcher = pattern.matcher(value);
-        while (matcher.find()) {
-            final String key = matcher.group(2);
-            String replacement = System.getProperty(key);
-            if (replacement == null) {
-                replacement = matcher.group(1);
-            }
-            matcher.appendReplacement(tunedText,
-                    replacement.replace("$", "\\$"));
-
-        }
-        matcher.appendTail(tunedText);
-        return tunedText.toString();
     }
 
     public class TokenizerWrapper extends Tokenizer {
