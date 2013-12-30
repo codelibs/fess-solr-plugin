@@ -162,6 +162,7 @@ public class MonitoringTokenizerFactory extends TokenizerFactory implements
                 }
                 try {
                     if (current > timestamp) {
+                        timestamp = current;
                         baseTokenizerFactory = createTokenizerFactory();
                     }
                 } catch (final Exception e) {
