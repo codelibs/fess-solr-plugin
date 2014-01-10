@@ -1,14 +1,12 @@
-package jp.sf.fess.solr.plugin.analysis;
+package jp.sf.fess.solr.plugin.analysis.monitor;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.Reader;
-import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Timer;
-import java.util.TimerTask;
+
+import jp.sf.fess.solr.plugin.util.MonitoringFileUtil;
 
 import org.apache.lucene.analysis.Tokenizer;
 import org.apache.lucene.analysis.util.ResourceLoader;
@@ -16,22 +14,11 @@ import org.apache.lucene.analysis.util.ResourceLoaderAware;
 import org.apache.lucene.analysis.util.TokenizerFactory;
 import org.apache.lucene.util.AttributeSource;
 import org.apache.lucene.util.AttributeSource.AttributeFactory;
-import org.apache.solr.core.SolrResourceLoader;
 
 public class MonitoringTokenizerFactory extends TokenizerFactory implements
         ResourceLoaderAware {
 
     private static final boolean VERBOSE = true; // debug
-
-    protected static final int DEFAULT_TIMER_PERIOD = 60000;
-
-    protected static final String MONITORING_PERIOD = "monitoringPeriod";
-
-    protected static final String MONITORING_FILE = "monitoringFile";
-
-    protected static final String BASE_CLASS = "baseClass";
-
-    protected static final String CLASS = "class";
 
     protected static final Reader ILLEGAL_STATE_READER = new Reader() {
         @Override
@@ -53,11 +40,7 @@ public class MonitoringTokenizerFactory extends TokenizerFactory implements
 
     protected final Map<String, String> baseArgs;
 
-    protected Map<String, String> monitorArgs;
-
-    protected final String baseClass;
-
-    protected Timer monitorTimer;
+    protected String baseClass;
 
     protected volatile long factoryTimestamp;
 
@@ -68,6 +51,10 @@ public class MonitoringTokenizerFactory extends TokenizerFactory implements
     protected Field attributeImplsField;
 
     protected Field currentStateField;
+
+    protected long lastCheckedTime;
+
+    protected MonitoringFileTask monitoringFileTask;
 
     public MonitoringTokenizerFactory(final Map<String, String> args) {
         super(args);
@@ -90,20 +77,30 @@ public class MonitoringTokenizerFactory extends TokenizerFactory implements
         }
 
         baseArgs = new HashMap<String, String>(args);
-        monitorArgs = new HashMap<String, String>();
-
-        baseClass = baseArgs.remove(BASE_CLASS);
-        baseArgs.put(CLASS, baseClass);
-        baseArgs.put(LUCENE_MATCH_VERSION_PARAM, luceneMatchVersion.toString());
-
-        createMonitorParams();
-        baseTokenizerFactory = createTokenizerFactory();
     }
 
     @Override
     public void inform(final ResourceLoader loader) throws IOException {
         this.loader = loader;
-        monitorTimer = createMonitorTimer();
+        final Map<String, String> monitorArgs = MonitoringFileUtil
+                .createMonitorArgs(baseArgs);
+
+        baseClass = MonitoringFileUtil.initBaseArgs(baseArgs,
+                luceneMatchVersion.toString());
+
+        baseTokenizerFactory = MonitoringFileUtil.createFactory(baseClass,
+                baseArgs, loader);
+        factoryTimestamp = System.currentTimeMillis();
+
+        monitoringFileTask = MonitoringFileUtil.createMonitoringFileTask(
+                monitorArgs, loader, new MonitoringFileTask.Callback() {
+                    @Override
+                    public void process() {
+                        baseTokenizerFactory = MonitoringFileUtil
+                                .createFactory(baseClass, baseArgs, loader);
+                        factoryTimestamp = System.currentTimeMillis();
+                    }
+                });
 
         if (baseTokenizerFactory instanceof ResourceLoaderAware) {
             ((ResourceLoaderAware) baseTokenizerFactory).inform(loader);
@@ -113,97 +110,6 @@ public class MonitoringTokenizerFactory extends TokenizerFactory implements
     @Override
     public Tokenizer create(final AttributeFactory factory, final Reader input) {
         return new TokenizerWrapper(factory, input);
-    }
-
-    protected TokenizerFactory createTokenizerFactory() {
-        if (VERBOSE) {
-            System.out.println("Create " + baseClass + " with " + baseArgs);
-        }
-
-        try {
-            @SuppressWarnings("unchecked")
-            final Class<? extends TokenizerFactory> clazz = (Class<? extends TokenizerFactory>) Class
-                    .forName(baseClass);
-            final Constructor<? extends TokenizerFactory> constructor = clazz
-                    .getConstructor(Map.class);
-            final TokenizerFactory tokenizerFactory = constructor
-                    .newInstance(new HashMap<String, String>(baseArgs));
-
-            if (loader != null
-                    && tokenizerFactory instanceof ResourceLoaderAware) {
-                ((ResourceLoaderAware) tokenizerFactory).inform(loader);
-            }
-            factoryTimestamp = System.currentTimeMillis();
-            return tokenizerFactory;
-
-        } catch (final Exception e) {
-            throw new IllegalArgumentException(
-                    "Invalid parameters to create TokenizerFactory.", e);
-        }
-    }
-
-    protected void createMonitorParams() {
-        monitorArgs.put(MONITORING_FILE, baseArgs.remove(MONITORING_FILE));
-        monitorArgs.put(MONITORING_PERIOD, baseArgs.remove(MONITORING_PERIOD));
-    }
-
-    protected Timer createMonitorTimer() {
-        final File monitoringFile;
-        final String monitoringFilePath = monitorArgs.get(MONITORING_FILE);
-        final File file = new File(monitoringFilePath);
-        if (file.exists()) {
-            monitoringFile = file;
-        } else {
-            monitoringFile = new File(
-                    ((SolrResourceLoader) loader).getConfigDir(),
-                    monitoringFilePath);
-        }
-        final String monitoringPeriodStr = monitorArgs.get(MONITORING_PERIOD);
-        final long monitoringPeriod = monitoringPeriodStr == null ? DEFAULT_TIMER_PERIOD
-                : Long.parseLong(monitoringPeriodStr);
-        final long currentTime = monitoringFile.lastModified();
-        if (VERBOSE) {
-            System.out.println("Starting a timer(" + monitoringPeriod
-                    + "ms) to monitor " + monitoringFile.getAbsolutePath());
-        }
-        monitorArgs = null;
-
-        final TimerTask task = new TimerTask() {
-            long timestamp = currentTime;
-
-            @Override
-            public void run() {
-                final long current = monitoringFile.lastModified();
-                if (VERBOSE) {
-                    System.out.println("Monitoring " + monitoringFile + " ("
-                            + timestamp + "," + current + ")");
-                }
-                try {
-                    if (current > timestamp) {
-                        timestamp = current;
-                        baseTokenizerFactory = createTokenizerFactory();
-                    }
-                } catch (final Exception e) {
-                    // ignore
-                    if (VERBOSE) {
-                        e.printStackTrace();
-                    }
-                }
-            }
-        };
-        final Timer timer = new Timer("ReloadableTokenizer:" + baseClass);
-        timer.schedule(task,
-                monitoringPeriod > DEFAULT_TIMER_PERIOD ? monitoringPeriod
-                        : DEFAULT_TIMER_PERIOD, monitoringPeriod);
-        return timer;
-    }
-
-    @Override
-    protected void finalize() throws Throwable {
-        if (monitorTimer != null) {
-            monitorTimer.cancel();
-        }
-        super.finalize();
     }
 
     public class TokenizerWrapper extends Tokenizer {
@@ -232,7 +138,7 @@ public class MonitoringTokenizerFactory extends TokenizerFactory implements
             if (factoryTimestamp > tokenizerTimestamp) {
                 if (VERBOSE) {
                     System.out
-                            .println("Update ReloadableTokenizer ("
+                            .println("Update Tokenizer/" + baseClass + " ("
                                     + tokenizerTimestamp + ","
                                     + factoryTimestamp + ")");
                 }
@@ -241,6 +147,8 @@ public class MonitoringTokenizerFactory extends TokenizerFactory implements
                 tokenizer.setReader(inputPending);
             }
             tokenizer.reset();
+
+            monitoringFileTask.process();
         }
 
         @Override
