@@ -8,13 +8,10 @@ import org.apache.lucene.document.NumericDocValuesField;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexableField;
 import org.apache.lucene.index.Term;
-import org.apache.solr.core.SolrCore;
 import org.apache.solr.update.AddUpdateCommand;
-import org.apache.solr.update.DirectUpdateHandler2;
-import org.apache.solr.update.UpdateHandler;
 import org.apache.solr.util.RefCounted;
 
-public class FessDirectUpdateHandler extends DirectUpdateHandler2 {
+public class DocValueUpdateHandlerFilter extends UpdateHandlerFilter {
 
     private static final String TERM_PARAM = "term";
 
@@ -22,17 +19,9 @@ public class FessDirectUpdateHandler extends DirectUpdateHandler2 {
 
     private static final String UPDATE_CMD = "update";
 
-    public FessDirectUpdateHandler(final SolrCore core) {
-        super(core);
-    }
-
-    public FessDirectUpdateHandler(final SolrCore core,
-            final UpdateHandler updateHandler) {
-        super(core, updateHandler);
-    }
-
     @Override
-    public int addDoc(final AddUpdateCommand cmd) throws IOException {
+    public int addDoc(final AddUpdateCommand cmd,
+            final UpdateHandlerFilterChain chain) throws IOException {
         final String exCmd = cmd.getReq().getParams().get(EXTENDED_CMD);
         if (UPDATE_CMD.equals(exCmd)) {
             final String termName = cmd.getReq().getParams().get(TERM_PARAM);
@@ -41,8 +30,8 @@ public class FessDirectUpdateHandler extends DirectUpdateHandler2 {
             }
 
             int rc = -1;
-            final RefCounted<IndexWriter> iw = solrCoreState
-                    .getIndexWriter(core);
+            final RefCounted<IndexWriter> iw = updateHandler.getSolrCoreState()
+                    .getIndexWriter(updateHandler.getSolrCore());
             try {
                 final IndexWriter writer = iw.get();
 
@@ -61,7 +50,7 @@ public class FessDirectUpdateHandler extends DirectUpdateHandler2 {
             }
             return rc;
         } else {
-            return super.addDoc(cmd);
+            return chain.addDoc(cmd);
         }
     }
 
