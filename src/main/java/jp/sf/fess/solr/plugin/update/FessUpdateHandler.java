@@ -164,4 +164,15 @@ public class FessUpdateHandler extends DirectUpdateHandler2 {
     protected void doSplit(final SplitIndexCommand cmd) throws IOException {
         super.split(cmd);
     }
+
+    @Override
+    public void close() throws IOException {
+        final UpdateHandlerFilterChain chain = new UpdateHandlerFilterChain(
+                this, filters);
+        chain.close();
+    }
+
+    protected void doClose() throws IOException {
+        super.close();
+    }
 }

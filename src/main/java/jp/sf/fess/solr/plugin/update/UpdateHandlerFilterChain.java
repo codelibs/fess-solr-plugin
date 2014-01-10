@@ -102,4 +102,14 @@ public class UpdateHandlerFilterChain {
         }
     }
 
+    public void close() throws IOException {
+        if (position < filters.length) {
+            final UpdateHandlerFilter filter = filters[position];
+            position++;
+            filter.close(this);
+        } else {
+            updateHandler.doClose();
+        }
+    }
+
 }

@@ -57,4 +57,7 @@ public abstract class UpdateHandlerFilter {
         chain.split(cmd);
     }
 
+    public void close(final UpdateHandlerFilterChain chain) throws IOException {
+        chain.close();
+    }
 }
