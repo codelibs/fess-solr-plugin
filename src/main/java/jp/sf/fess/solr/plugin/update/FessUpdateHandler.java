@@ -39,7 +39,7 @@ public class FessUpdateHandler extends DirectUpdateHandler2 {
     protected void loadFilters() {
         final SolrConfig solrConfig = core.getSolrConfig();
         final NodeList filterNodeList = solrConfig.getNodeList(
-                "updateHandler/filters", false);
+                "updateHandler/filters/filter", false);
 
         if (filterNodeList == null) {
             log.info("No UpdateHandlerFilter.");
