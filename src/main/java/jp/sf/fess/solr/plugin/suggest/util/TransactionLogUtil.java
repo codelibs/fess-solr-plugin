@@ -1,43 +1,51 @@
 package jp.sf.fess.solr.plugin.suggest.util;
 
-
-import com.google.common.io.Files;
-import org.apache.solr.update.TransactionLog;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Collection;
 
+import org.apache.solr.update.TransactionLog;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.google.common.io.Files;
+
 public class TransactionLogUtil {
-    private static final Logger logger = LoggerFactory.getLogger(TransactionLogUtil.class);
+    private static final Logger logger = LoggerFactory
+            .getLogger(TransactionLogUtil.class);
 
     private static final String PREFIX = "suggest-";
 
-    public static TransactionLog createSuggestTransactionLog(File tlogFile, Collection<String> globalStrings, boolean openExisting)
-            throws NoSuchMethodException, InstantiationException, IllegalAccessException, IOException,
+    public static TransactionLog createSuggestTransactionLog(
+            final File tlogFile, final Collection<String> globalStrings,
+            final boolean openExisting) throws NoSuchMethodException,
+            InstantiationException, IllegalAccessException, IOException,
             IllegalArgumentException, InvocationTargetException {
-        long start = System.currentTimeMillis();
-        File file = new File(tlogFile.getParent(), PREFIX + tlogFile.getName());
+        final long start = System.currentTimeMillis();
+        final File file = new File(tlogFile.getParent(), PREFIX
+                + tlogFile.getName());
         Files.copy(tlogFile, file);
-        if(logger.isInfoEnabled()) {
-            logger.info("Create suggest trans log. took=" + (System.currentTimeMillis() - start) + " file=" + file.getAbsolutePath());
+        if (logger.isInfoEnabled()) {
+            logger.info("Create suggest trans log. took="
+                    + (System.currentTimeMillis() - start) + " file="
+                    + file.getAbsolutePath());
         }
-        Class cls = TransactionLog.class;
-        Constructor constructor = cls.getDeclaredConstructor(File.class, Collection.class, Boolean.TYPE);
+        final Class<TransactionLog> cls = TransactionLog.class;
+        final Constructor<TransactionLog> constructor = cls
+                .getDeclaredConstructor(File.class, Collection.class,
+                        Boolean.TYPE);
         constructor.setAccessible(true);
-        return (TransactionLog) constructor.newInstance(file, globalStrings, openExisting);
+        return constructor.newInstance(file, globalStrings, openExisting);
     }
 
-    public static void clearSuggestTransactionLog(String dir) {
-        File d = new File(dir);
+    public static void clearSuggestTransactionLog(final String dir) {
+        final File d = new File(dir);
         if (!d.isDirectory()) {
             return;
         }
-        for (File f : d.listFiles()) {
+        for (final File f : d.listFiles()) {
             if (f.isFile() && f.getName().startsWith(PREFIX)) {
                 if (!f.delete()) {
                     f.deleteOnExit();

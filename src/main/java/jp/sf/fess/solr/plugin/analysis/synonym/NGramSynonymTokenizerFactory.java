@@ -124,6 +124,7 @@ public final class NGramSynonymTokenizerFactory extends TokenizerFactory
             protected TokenStreamComponents createComponents(
                     final String fieldName, final Reader reader) {
                 final Tokenizer tokenizer = new KeywordTokenizer(reader);
+                @SuppressWarnings("resource")
                 final TokenStream stream = ignoreCase ? new LowerCaseFilter(
                         Version.LUCENE_46, tokenizer) : tokenizer;
                 return new TokenStreamComponents(tokenizer, stream);

@@ -49,7 +49,8 @@ public class WordFreqValueSourceParser extends ValueSourceParser {
         }
 
         @Override
-        public FunctionValues getValues(final Map context,
+        public FunctionValues getValues(
+                @SuppressWarnings("rawtypes") final Map context,
                 final AtomicReaderContext readerContext) throws IOException {
             return new IntDocValues(this) {
                 @Override

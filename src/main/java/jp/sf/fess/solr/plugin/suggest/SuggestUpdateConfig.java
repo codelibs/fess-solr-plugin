@@ -1,6 +1,5 @@
 package jp.sf.fess.solr.plugin.suggest;
 
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -20,13 +19,13 @@ public class SuggestUpdateConfig {
 
     private String segmentField = "segment";
 
-    private List<FieldConfig> fieldConfigList = new ArrayList<FieldConfig>();
+    private final List<FieldConfig> fieldConfigList = new ArrayList<FieldConfig>();
 
     public String getSolrUrl() {
         return solrUrl;
     }
 
-    public void setSolrUrl(String solrUrl) {
+    public void setSolrUrl(final String solrUrl) {
         this.solrUrl = solrUrl;
     }
 
@@ -34,7 +33,7 @@ public class SuggestUpdateConfig {
         return updateInterval;
     }
 
-    public void setUpdateInterval(long updateInterval) {
+    public void setUpdateInterval(final long updateInterval) {
         this.updateInterval = updateInterval;
     }
 
@@ -42,7 +41,7 @@ public class SuggestUpdateConfig {
         return expiresField;
     }
 
-    public void setExpiresField(String expiresField) {
+    public void setExpiresField(final String expiresField) {
         this.expiresField = expiresField;
     }
 
@@ -50,7 +49,7 @@ public class SuggestUpdateConfig {
         return segmentField;
     }
 
-    public void setSegmentField(String segmentField) {
+    public void setSegmentField(final String segmentField) {
         this.segmentField = segmentField;
     }
 
@@ -58,7 +57,7 @@ public class SuggestUpdateConfig {
         return solrUser;
     }
 
-    public void setSolrUser(String solrUser) {
+    public void setSolrUser(final String solrUser) {
         this.solrUser = solrUser;
     }
 
@@ -66,7 +65,7 @@ public class SuggestUpdateConfig {
         return solrPassword;
     }
 
-    public void setSolrPassword(String solrPassword) {
+    public void setSolrPassword(final String solrPassword) {
         this.solrPassword = solrPassword;
     }
 
@@ -74,7 +73,7 @@ public class SuggestUpdateConfig {
         return labelFields;
     }
 
-    public void setLabelFields(String[] labelFields) {
+    public void setLabelFields(final String[] labelFields) {
         this.labelFields = labelFields;
     }
 
@@ -82,24 +81,24 @@ public class SuggestUpdateConfig {
         return fieldConfigList;
     }
 
-    public void addFieldConfig(FieldConfig fieldConfig) {
-        this.fieldConfigList.add(fieldConfig);
+    public void addFieldConfig(final FieldConfig fieldConfig) {
+        fieldConfigList.add(fieldConfig);
     }
 
     public static class FieldConfig {
-        private String[] targetFields = new String[]{"content", "title"};
+        private String[] targetFields = new String[] { "content", "title" };
 
         private TokenizerConfig tokenizerConfig = null;
 
-        private List<ConverterConfig> converterConfigList = new ArrayList<ConverterConfig>();
+        private final List<ConverterConfig> converterConfigList = new ArrayList<ConverterConfig>();
 
-        private List<NormalizerConfig> normalizerConfigList = new ArrayList<NormalizerConfig>();
+        private final List<NormalizerConfig> normalizerConfigList = new ArrayList<NormalizerConfig>();
 
         public String[] getTargetFields() {
             return targetFields;
         }
 
-        public void setTargetFields(String[] targetFields) {
+        public void setTargetFields(final String[] targetFields) {
             this.targetFields = targetFields;
         }
 
@@ -107,7 +106,7 @@ public class SuggestUpdateConfig {
             return tokenizerConfig;
         }
 
-        public void setTokenizerConfig(TokenizerConfig tokenizerConfig) {
+        public void setTokenizerConfig(final TokenizerConfig tokenizerConfig) {
             this.tokenizerConfig = tokenizerConfig;
         }
 
@@ -115,16 +114,16 @@ public class SuggestUpdateConfig {
             return converterConfigList;
         }
 
-        public void addConverterConfig(ConverterConfig converterConfig) {
-            this.converterConfigList.add(converterConfig);
+        public void addConverterConfig(final ConverterConfig converterConfig) {
+            converterConfigList.add(converterConfig);
         }
 
         public List<NormalizerConfig> getNormalizerConfigList() {
             return normalizerConfigList;
         }
 
-        public void addNormalizerConfig(NormalizerConfig normalizerConfig) {
-            this.normalizerConfigList.add(normalizerConfig);
+        public void addNormalizerConfig(final NormalizerConfig normalizerConfig) {
+            normalizerConfigList.add(normalizerConfig);
         }
     }
 
@@ -137,7 +136,7 @@ public class SuggestUpdateConfig {
             return className;
         }
 
-        public void setClassName(String className) {
+        public void setClassName(final String className) {
             this.className = className;
         }
 
@@ -145,7 +144,7 @@ public class SuggestUpdateConfig {
             return args;
         }
 
-        public void setArgs(Map<String, String> args) {
+        public void setArgs(final Map<String, String> args) {
             this.args = args;
         }
     }
@@ -159,7 +158,7 @@ public class SuggestUpdateConfig {
             return className;
         }
 
-        public void setClassName(String className) {
+        public void setClassName(final String className) {
             this.className = className;
         }
 
@@ -167,7 +166,7 @@ public class SuggestUpdateConfig {
             return properties;
         }
 
-        public void setProperties(Map<String, String> properties) {
+        public void setProperties(final Map<String, String> properties) {
             this.properties = properties;
         }
     }
@@ -181,7 +180,7 @@ public class SuggestUpdateConfig {
             return className;
         }
 
-        public void setClassName(String className) {
+        public void setClassName(final String className) {
             this.className = className;
         }
 
@@ -189,7 +188,7 @@ public class SuggestUpdateConfig {
             return properties;
         }
 
-        public void setProperties(Map<String, String> properties) {
+        public void setProperties(final Map<String, String> properties) {
             this.properties = properties;
         }
     }

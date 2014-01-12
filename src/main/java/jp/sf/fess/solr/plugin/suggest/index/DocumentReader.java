@@ -1,16 +1,5 @@
 package jp.sf.fess.solr.plugin.suggest.index;
 
-
-import jp.sf.fess.solr.plugin.suggest.entity.SuggestItem;
-import jp.sf.fess.suggest.converter.SuggestReadingConverter;
-import jp.sf.fess.suggest.normalizer.SuggestNormalizer;
-import org.apache.lucene.analysis.Tokenizer;
-import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
-import org.apache.lucene.analysis.util.TokenizerFactory;
-import org.apache.solr.common.SolrInputDocument;
-import org.apache.solr.common.SolrInputField;
-import org.apache.solr.common.util.DateUtil;
-
 import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
@@ -18,8 +7,19 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 
+import jp.sf.fess.solr.plugin.suggest.entity.SuggestItem;
+import jp.sf.fess.suggest.converter.SuggestReadingConverter;
+import jp.sf.fess.suggest.normalizer.SuggestNormalizer;
+
+import org.apache.lucene.analysis.Tokenizer;
+import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
+import org.apache.lucene.analysis.util.TokenizerFactory;
+import org.apache.solr.common.SolrInputDocument;
+import org.apache.solr.common.SolrInputField;
+import org.apache.solr.common.util.DateUtil;
+
 public class DocumentReader {
-    private List<String> targetFields;
+    private final List<String> targetFields;
 
     private int fieldPos = 0;
 
@@ -45,27 +45,30 @@ public class DocumentReader {
 
     private boolean hasNext = true;
 
-    public DocumentReader(TokenizerFactory tokenizerFactory, SuggestReadingConverter suggestReadingConverter,
-                          SuggestNormalizer suggestNormalizer, SolrInputDocument solrInputDocument,
-                          List<String> targetFields, List<String> targetLabelFields, String expiresFidld,
-                          String segmentField) {
+    public DocumentReader(final TokenizerFactory tokenizerFactory,
+            final SuggestReadingConverter suggestReadingConverter,
+            final SuggestNormalizer suggestNormalizer,
+            final SolrInputDocument solrInputDocument,
+            final List<String> targetFields,
+            final List<String> targetLabelFields, final String expiresFidld,
+            final String segmentField) {
         this.solrInputDocument = solrInputDocument;
         this.targetFields = targetFields;
         this.targetLabelFields = targetLabelFields;
         this.tokenizerFactory = tokenizerFactory;
-        this.expiresField = expiresFidld;
+        expiresField = expiresFidld;
         this.segmentField = segmentField;
         this.suggestReadingConverter = suggestReadingConverter;
         this.suggestNormalizer = suggestNormalizer;
 
-        Object expireObj = solrInputDocument.getFieldValue(expiresField);
+        final Object expireObj = solrInputDocument.getFieldValue(expiresField);
         if (expireObj != null) {
             expire = expireObj.toString();
         } else {
             expire = DateUtil.getThreadLocalDateFormat().format(new Date());
         }
 
-        Object segmentObj = solrInputDocument.getFieldValue(segmentField);
+        final Object segmentObj = solrInputDocument.getFieldValue(segmentField);
         if (segmentObj != null) {
             segment = segmentObj.toString();
         } else {
@@ -75,19 +78,22 @@ public class DocumentReader {
 
     public SuggestItem next() throws IOException {
         if (tokenizerFactory == null) {
-            String text = getNextFieldString();
+            final String text = getNextFieldString();
             if (text == null) {
                 return null;
             }
-            SuggestItem item = createSuggestItem(text, targetFields.get(fieldPos));
+            final SuggestItem item = createSuggestItem(text,
+                    targetFields.get(fieldPos));
             fieldPos++;
             return item;
         } else {
             while (hasNext) {
                 if (tokenizer != null) {
                     if (tokenizer.incrementToken()) {
-                        CharTermAttribute att = tokenizer.getAttribute(CharTermAttribute.class);
-                        SuggestItem item = createSuggestItem(att.toString(), targetFields.get(fieldPos));
+                        final CharTermAttribute att = tokenizer
+                                .getAttribute(CharTermAttribute.class);
+                        final SuggestItem item = createSuggestItem(
+                                att.toString(), targetFields.get(fieldPos));
                         return item;
                     }
                     tokenizer.close();
@@ -103,24 +109,25 @@ public class DocumentReader {
         return null;
     }
 
-    private SuggestItem createSuggestItem(String text, String fieldName) {
-        SuggestItem item = new SuggestItem();
+    private SuggestItem createSuggestItem(final String text,
+            final String fieldName) {
+        final SuggestItem item = new SuggestItem();
         item.setExpiresField(expiresField);
         item.setExpires(expire);
         item.setSegmentField(segmentField);
         item.setSegment(segment);
-        List<String> labels = item.getLabels();
-        for (String label : targetLabelFields) {
-            SolrInputField field = solrInputDocument.getField(label);
+        final List<String> labels = item.getLabels();
+        for (final String label : targetLabelFields) {
+            final SolrInputField field = solrInputDocument.getField(label);
             if (field == null) {
                 continue;
             }
-            Collection<Object> valList = field.getValues();
+            final Collection<Object> valList = field.getValues();
             if (valList == null || valList.size() == 0) {
                 continue;
             }
 
-            for (Object val : valList) {
+            for (final Object val : valList) {
                 labels.add(val.toString());
             }
             break;
@@ -129,8 +136,9 @@ public class DocumentReader {
         item.addFieldName(fieldName);
         item.setText(text);
         if (suggestReadingConverter != null) {
-            List<String> readingList = suggestReadingConverter.convert(item.getText());
-            for (String reading : readingList) {
+            final List<String> readingList = suggestReadingConverter
+                    .convert(item.getText());
+            for (final String reading : readingList) {
                 item.addReading(reading.toString());
             }
         } else {
@@ -141,12 +149,12 @@ public class DocumentReader {
     }
 
     private Tokenizer createTokenizer() throws IOException {
-        String nextFieldString = getNextFieldString();
+        final String nextFieldString = getNextFieldString();
         if (nextFieldString == null) {
             return null;
         }
         final Reader rd = new StringReader(nextFieldString);
-        Tokenizer tokenizer = tokenizerFactory.create(rd);
+        final Tokenizer tokenizer = tokenizerFactory.create(rd);
         tokenizer.reset();
         return tokenizer;
     }
@@ -155,18 +163,18 @@ public class DocumentReader {
         StringBuilder fieldValue = null;
 
         for (; fieldPos < targetFields.size(); fieldPos++) {
-            String fieldName = targetFields.get(fieldPos);
-            SolrInputField field = solrInputDocument.getField(fieldName);
+            final String fieldName = targetFields.get(fieldPos);
+            final SolrInputField field = solrInputDocument.getField(fieldName);
             if (field == null) {
                 continue;
             }
-            Collection<Object> valList = field.getValues();
+            final Collection<Object> valList = field.getValues();
             if (valList == null || valList.size() == 0) {
                 continue;
             }
 
             fieldValue = new StringBuilder();
-            for (Object val : valList) {
+            for (final Object val : valList) {
                 fieldValue.append(val.toString());
                 fieldValue.append(' ');
             }

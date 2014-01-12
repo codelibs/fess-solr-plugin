@@ -1,5 +1,12 @@
 package jp.sf.fess.solr.plugin.suggest.util;
 
+import java.lang.reflect.Constructor;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import jp.sf.fess.solr.plugin.suggest.SuggestUpdateConfig;
 import jp.sf.fess.solr.plugin.suggest.entity.SuggestFieldInfo;
 import jp.sf.fess.suggest.SuggestConstants;
@@ -8,6 +15,7 @@ import jp.sf.fess.suggest.converter.SuggestReadingConverter;
 import jp.sf.fess.suggest.normalizer.SuggestIntegrateNormalizer;
 import jp.sf.fess.suggest.normalizer.SuggestNormalizer;
 import jp.sf.fess.suggest.util.SuggestUtil;
+
 import org.apache.commons.lang.StringUtils;
 import org.apache.lucene.analysis.util.TokenizerFactory;
 import org.apache.solr.core.SolrConfig;
@@ -17,177 +25,204 @@ import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
-import java.lang.reflect.Constructor;
-import java.util.*;
-
 /**
  * Created by yfujita on 2014/01/12.
  */
 public class SolrConfigUtil {
-    private static final Logger logger = LoggerFactory.getLogger(SolrConfigUtil.class);
+    private static final Logger logger = LoggerFactory
+            .getLogger(SolrConfigUtil.class);
 
     private static final String USER_DICT_PATH = "userDictionary";
 
     private static final String USER_DICT_ENCODING = "userDictionaryEncoding";
 
-    public static SuggestUpdateConfig getUpdateHandlerConfig(SolrConfig config) {
-        SuggestUpdateConfig suggestUpdateConfig = new SuggestUpdateConfig();
+    public static SuggestUpdateConfig getUpdateHandlerConfig(
+            final SolrConfig config) {
+        final SuggestUpdateConfig suggestUpdateConfig = new SuggestUpdateConfig();
 
         //setting config
-        String solrUrl = config.getVal("updateHandler/solrUrl",
-                false);
+        final String solrUrl = config.getVal("updateHandler/solrUrl", false);
         if (StringUtils.isNotBlank(solrUrl)) {
             suggestUpdateConfig.setSolrUrl(solrUrl);
         }
 
-        String solrUser = config.getVal("updateHandler/solrUser",
-                false);
+        final String solrUser = config.getVal("updateHandler/solrUser", false);
         if (StringUtils.isNotBlank(solrUser)) {
             suggestUpdateConfig.setSolrUser(solrUser);
         }
-        String solrPassword = config.getVal("updateHandler/solrPassword",
+        final String solrPassword = config.getVal("updateHandler/solrPassword",
                 false);
         if (StringUtils.isNotBlank(solrPassword)) {
             suggestUpdateConfig.setSolrPassword(solrPassword);
         }
-        String labelFields = config.getVal("updateHandler/labelFields",
+        final String labelFields = config.getVal("updateHandler/labelFields",
                 false);
         if (StringUtils.isNotBlank(labelFields)) {
             suggestUpdateConfig.setLabelFields(labelFields.trim().split(","));
         }
 
-        String expiresField = config.getVal("updateHandler/expiresField",
+        final String expiresField = config.getVal("updateHandler/expiresField",
                 false);
         if (StringUtils.isNotBlank(expiresField)) {
             suggestUpdateConfig.setExpiresField(expiresField);
         }
-        String segmentField = config.getVal("updateHandler/segmentField",
+        final String segmentField = config.getVal("updateHandler/segmentField",
                 false);
         if (StringUtils.isNotBlank(segmentField)) {
             suggestUpdateConfig.setSegmentField(segmentField);
         }
-        String updateInterval = config.getVal("updateHandler/updateInterval",
-                false);
-        if (StringUtils.isNotBlank(updateInterval) && StringUtils.isNumeric(updateInterval)) {
-            suggestUpdateConfig.setUpdateInterval(Long.parseLong(updateInterval));
+        final String updateInterval = config.getVal(
+                "updateHandler/updateInterval", false);
+        if (StringUtils.isNotBlank(updateInterval)
+                && StringUtils.isNumeric(updateInterval)) {
+            suggestUpdateConfig.setUpdateInterval(Long
+                    .parseLong(updateInterval));
         }
 
-        NodeList nodeList = config.getNodeList("updateHandler/suggestFieldInfo", true);
+        final NodeList nodeList = config.getNodeList(
+                "updateHandler/suggestFieldInfo", true);
         for (int i = 0; i < nodeList.getLength(); i++) {
             try {
-                SuggestUpdateConfig.FieldConfig fieldConfig = new SuggestUpdateConfig.FieldConfig();
-                Node fieldInfoNode = nodeList.item(i);
-                NamedNodeMap fieldInfoAttributes = fieldInfoNode.getAttributes();
-                Node fieldNameNode = fieldInfoAttributes.getNamedItem("fieldName");
-                String fieldName = fieldNameNode.getNodeValue();
+                final SuggestUpdateConfig.FieldConfig fieldConfig = new SuggestUpdateConfig.FieldConfig();
+                final Node fieldInfoNode = nodeList.item(i);
+                final NamedNodeMap fieldInfoAttributes = fieldInfoNode
+                        .getAttributes();
+                final Node fieldNameNode = fieldInfoAttributes
+                        .getNamedItem("fieldName");
+                final String fieldName = fieldNameNode.getNodeValue();
                 if (StringUtils.isBlank(fieldName)) {
                     continue;
                 }
                 fieldConfig.setTargetFields(fieldName.trim().split(","));
                 if (logger.isInfoEnabled()) {
-                    for (String s : fieldConfig.getTargetFields()) {
+                    for (final String s : fieldConfig.getTargetFields()) {
                         logger.info("fieldName : " + s);
                     }
                 }
 
-                NodeList fieldInfoChilds = fieldInfoNode.getChildNodes();
+                final NodeList fieldInfoChilds = fieldInfoNode.getChildNodes();
                 for (int j = 0; j < fieldInfoChilds.getLength(); j++) {
-                    Node fieldInfoChildNode = fieldInfoChilds.item(j);
-                    String fieldInfoChildNodeName = fieldInfoChildNode.getNodeName();
+                    final Node fieldInfoChildNode = fieldInfoChilds.item(j);
+                    final String fieldInfoChildNodeName = fieldInfoChildNode
+                            .getNodeName();
 
                     if ("tokenizerFactory".equals(fieldInfoChildNodeName)) {
-                        SuggestUpdateConfig.TokenizerConfig tokenizerConfig =
-                                new SuggestUpdateConfig.TokenizerConfig();
+                        final SuggestUpdateConfig.TokenizerConfig tokenizerConfig = new SuggestUpdateConfig.TokenizerConfig();
 
-                        NamedNodeMap tokenizerFactoryAttributes = fieldInfoChildNode.getAttributes();
-                        Node tokenizerClassNameNode = tokenizerFactoryAttributes.getNamedItem("class");
-                        String tokenizerClassName = tokenizerClassNameNode.getNodeValue();
+                        final NamedNodeMap tokenizerFactoryAttributes = fieldInfoChildNode
+                                .getAttributes();
+                        final Node tokenizerClassNameNode = tokenizerFactoryAttributes
+                                .getNamedItem("class");
+                        final String tokenizerClassName = tokenizerClassNameNode
+                                .getNodeValue();
                         tokenizerConfig.setClassName(tokenizerClassName);
                         if (logger.isInfoEnabled()) {
-                            logger.info("tokenizerFactory : " + tokenizerClassName);
+                            logger.info("tokenizerFactory : "
+                                    + tokenizerClassName);
                         }
 
-                        Map<String, String> args = new HashMap<String, String>();
-                        for (int k = 0; k < tokenizerFactoryAttributes.getLength(); k++) {
-                            Node attribute = tokenizerFactoryAttributes.item(k);
-                            String key = attribute.getNodeName();
-                            String value = attribute.getNodeValue();
+                        final Map<String, String> args = new HashMap<String, String>();
+                        for (int k = 0; k < tokenizerFactoryAttributes
+                                .getLength(); k++) {
+                            final Node attribute = tokenizerFactoryAttributes
+                                    .item(k);
+                            final String key = attribute.getNodeName();
+                            final String value = attribute.getNodeValue();
                             if (!"class".equals(key)) {
                                 args.put(key, value);
                             }
                         }
                         if (!args.containsKey(USER_DICT_PATH)) {
-                            args.put(USER_DICT_PATH, SuggestConstants.USER_DICT_PATH);
-                            args.put(USER_DICT_ENCODING, SuggestConstants.USER_DICT_ENCODING);
+                            args.put(USER_DICT_PATH,
+                                    SuggestConstants.USER_DICT_PATH);
+                            args.put(USER_DICT_ENCODING,
+                                    SuggestConstants.USER_DICT_ENCODING);
                         }
                         tokenizerConfig.setArgs(args);
 
                         fieldConfig.setTokenizerConfig(tokenizerConfig);
-                    } else if ("suggestReadingConverter".equals(fieldInfoChildNodeName)) {
-                        NodeList converterNodeList = fieldInfoChildNode.getChildNodes();
+                    } else if ("suggestReadingConverter"
+                            .equals(fieldInfoChildNodeName)) {
+                        final NodeList converterNodeList = fieldInfoChildNode
+                                .getChildNodes();
                         for (int k = 0; k < converterNodeList.getLength(); k++) {
-                            SuggestUpdateConfig.ConverterConfig converterConfig =
-                                    new SuggestUpdateConfig.ConverterConfig();
+                            final SuggestUpdateConfig.ConverterConfig converterConfig = new SuggestUpdateConfig.ConverterConfig();
 
-                            Node converterNode = converterNodeList.item(k);
-                            if (!"converter".equals(converterNode.getNodeName())) {
+                            final Node converterNode = converterNodeList
+                                    .item(k);
+                            if (!"converter"
+                                    .equals(converterNode.getNodeName())) {
                                 continue;
                             }
 
-                            NamedNodeMap converterAttributes = converterNode.getAttributes();
-                            Node classNameNode = converterAttributes.getNamedItem("class");
-                            String className = classNameNode.getNodeValue();
+                            final NamedNodeMap converterAttributes = converterNode
+                                    .getAttributes();
+                            final Node classNameNode = converterAttributes
+                                    .getNamedItem("class");
+                            final String className = classNameNode
+                                    .getNodeValue();
                             converterConfig.setClassName(className);
                             if (logger.isInfoEnabled()) {
                                 logger.info("converter : " + className);
                             }
 
-                            Map<String, String> properties = new HashMap<String, String>();
+                            final Map<String, String> properties = new HashMap<String, String>();
                             for (int l = 0; l < converterAttributes.getLength(); l++) {
-                                Node attribute = converterAttributes.item(l);
-                                String key = attribute.getNodeName();
-                                String value = attribute.getNodeValue();
+                                final Node attribute = converterAttributes
+                                        .item(l);
+                                final String key = attribute.getNodeName();
+                                final String value = attribute.getNodeValue();
                                 if (!"class".equals(key)) {
                                     properties.put(key, value);
                                 }
                             }
                             converterConfig.setProperties(properties);
                             if (logger.isInfoEnabled()) {
-                                logger.info("converter properties = " + properties);
+                                logger.info("converter properties = "
+                                        + properties);
                             }
                             fieldConfig.addConverterConfig(converterConfig);
                         }
-                    } else if ("suggestNormalizer".equals(fieldInfoChildNodeName)) {
-                        NodeList normalizerNodeList = fieldInfoChildNode.getChildNodes();
+                    } else if ("suggestNormalizer"
+                            .equals(fieldInfoChildNodeName)) {
+                        final NodeList normalizerNodeList = fieldInfoChildNode
+                                .getChildNodes();
                         for (int k = 0; k < normalizerNodeList.getLength(); k++) {
-                            SuggestUpdateConfig.NormalizerConfig normalizerConfig =
-                                    new SuggestUpdateConfig.NormalizerConfig();
+                            final SuggestUpdateConfig.NormalizerConfig normalizerConfig = new SuggestUpdateConfig.NormalizerConfig();
 
-                            Node normalizerNode = normalizerNodeList.item(k);
-                            if (!"normalizer".equals(normalizerNode.getNodeName())) {
+                            final Node normalizerNode = normalizerNodeList
+                                    .item(k);
+                            if (!"normalizer".equals(normalizerNode
+                                    .getNodeName())) {
                                 continue;
                             }
 
-                            NamedNodeMap normalizerAttributes = normalizerNode.getAttributes();
-                            Node classNameNode = normalizerAttributes.getNamedItem("class");
-                            String className = classNameNode.getNodeValue();
+                            final NamedNodeMap normalizerAttributes = normalizerNode
+                                    .getAttributes();
+                            final Node classNameNode = normalizerAttributes
+                                    .getNamedItem("class");
+                            final String className = classNameNode
+                                    .getNodeValue();
                             normalizerConfig.setClassName(className);
                             if (logger.isInfoEnabled()) {
                                 logger.info("normalizer : " + className);
                             }
 
-                            Map<String, String> properties = new HashMap<String, String>();
-                            for (int l = 0; l < normalizerAttributes.getLength(); l++) {
-                                Node attribute = normalizerAttributes.item(l);
-                                String key = attribute.getNodeName();
-                                String value = attribute.getNodeValue();
+                            final Map<String, String> properties = new HashMap<String, String>();
+                            for (int l = 0; l < normalizerAttributes
+                                    .getLength(); l++) {
+                                final Node attribute = normalizerAttributes
+                                        .item(l);
+                                final String key = attribute.getNodeName();
+                                final String value = attribute.getNodeValue();
                                 if (!"class".equals(key)) {
                                     properties.put(key, value);
                                 }
                             }
                             normalizerConfig.setProperties(properties);
                             if (logger.isInfoEnabled()) {
-                                logger.info("normalize properties = " + properties);
+                                logger.info("normalize properties = "
+                                        + properties);
                             }
                             fieldConfig.addNormalizerConfig(normalizerConfig);
                         }
@@ -195,7 +230,7 @@ public class SolrConfigUtil {
                 }
 
                 suggestUpdateConfig.addFieldConfig(fieldConfig);
-            } catch (Exception e) {
+            } catch (final Exception e) {
                 logger.warn("debug error", e);
             }
         }
@@ -203,50 +238,59 @@ public class SolrConfigUtil {
         return suggestUpdateConfig;
     }
 
-    public static List<SuggestFieldInfo> getSuggestFieldInfoList(SuggestUpdateConfig config)
-            throws Exception {
-        List<SuggestFieldInfo> list =
-                new ArrayList<SuggestFieldInfo>();
+    public static List<SuggestFieldInfo> getSuggestFieldInfoList(
+            final SuggestUpdateConfig config) throws Exception {
+        final List<SuggestFieldInfo> list = new ArrayList<SuggestFieldInfo>();
 
-        for (SuggestUpdateConfig.FieldConfig fieldConfig : config.getFieldConfigList()) {
+        for (final SuggestUpdateConfig.FieldConfig fieldConfig : config
+                .getFieldConfigList()) {
             try {
-                List<String> fieldNameList = Arrays.asList(fieldConfig.getTargetFields());
-                SuggestUpdateConfig.TokenizerConfig tokenizerConfig = fieldConfig.getTokenizerConfig();
+                final List<String> fieldNameList = Arrays.asList(fieldConfig
+                        .getTargetFields());
+                final SuggestUpdateConfig.TokenizerConfig tokenizerConfig = fieldConfig
+                        .getTokenizerConfig();
 
                 //create tokenizerFactory
                 TokenizerFactory tokenizerFactory = null;
                 if (tokenizerConfig != null) {
-                    Class cls = Class.forName(tokenizerConfig.getClassName());
-                    Constructor constructor = cls.getConstructor(Map.class);
-                    tokenizerFactory = (TokenizerFactory) constructor.newInstance(tokenizerConfig.getArgs());
+                    final Class<?> cls = Class.forName(tokenizerConfig
+                            .getClassName());
+                    final Constructor<?> constructor = cls
+                            .getConstructor(Map.class);
+                    tokenizerFactory = (TokenizerFactory) constructor
+                            .newInstance(tokenizerConfig.getArgs());
                 }
 
                 //create converter
-                SuggestIntegrateConverter suggestIntegrateConverter = new SuggestIntegrateConverter();
-                for (SuggestUpdateConfig.ConverterConfig converterConfig : fieldConfig.getConverterConfigList()) {
-                    SuggestReadingConverter suggestReadingConverter =
-                            SuggestUtil.createConverter(converterConfig.getClassName(), converterConfig.getProperties());
-                    suggestIntegrateConverter.addConverter(suggestReadingConverter);
+                final SuggestIntegrateConverter suggestIntegrateConverter = new SuggestIntegrateConverter();
+                for (final SuggestUpdateConfig.ConverterConfig converterConfig : fieldConfig
+                        .getConverterConfigList()) {
+                    final SuggestReadingConverter suggestReadingConverter = SuggestUtil
+                            .createConverter(converterConfig.getClassName(),
+                                    converterConfig.getProperties());
+                    suggestIntegrateConverter
+                            .addConverter(suggestReadingConverter);
                 }
                 suggestIntegrateConverter.start();
 
                 //create normalizer
-                SuggestIntegrateNormalizer suggestIntegrateNormalizer = new SuggestIntegrateNormalizer();
-                for (SuggestUpdateConfig.NormalizerConfig normalizerConfig : fieldConfig.getNormalizerConfigList()) {
-                    SuggestNormalizer suggestNormalizer =
-                            SuggestUtil.createNormalizer(normalizerConfig.getClassName(),
+                final SuggestIntegrateNormalizer suggestIntegrateNormalizer = new SuggestIntegrateNormalizer();
+                for (final SuggestUpdateConfig.NormalizerConfig normalizerConfig : fieldConfig
+                        .getNormalizerConfigList()) {
+                    final SuggestNormalizer suggestNormalizer = SuggestUtil
+                            .createNormalizer(normalizerConfig.getClassName(),
                                     normalizerConfig.getProperties());
                     suggestIntegrateNormalizer.addNormalizer(suggestNormalizer);
                 }
                 suggestIntegrateNormalizer.start();
 
-                SuggestFieldInfo suggestFieldInfo =
-                        new SuggestFieldInfo(fieldNameList, tokenizerFactory,
-                                suggestIntegrateConverter, suggestIntegrateNormalizer);
+                final SuggestFieldInfo suggestFieldInfo = new SuggestFieldInfo(
+                        fieldNameList, tokenizerFactory,
+                        suggestIntegrateConverter, suggestIntegrateNormalizer);
                 list.add(suggestFieldInfo);
-            } catch (Exception e) {
-                logger.warn("Failed to create Tokenizer." + fieldConfig.getTokenizerConfig().getClassName()
-                        , e);
+            } catch (final Exception e) {
+                logger.warn("Failed to create Tokenizer."
+                        + fieldConfig.getTokenizerConfig().getClassName(), e);
             }
         }
         return list;

@@ -1,22 +1,24 @@
 package jp.sf.fess.solr.plugin.suggest.entity;
 
-import jp.sf.fess.suggest.SuggestConstants;
-import org.apache.commons.codec.binary.Base64;
-import org.apache.solr.common.SolrInputDocument;
-
-import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import jp.sf.fess.suggest.SuggestConstants;
+
+import org.apache.solr.common.SolrInputDocument;
+
 public class SuggestItem {
     private volatile String text;
 
-    private List<String> readingList = Collections.synchronizedList(new ArrayList<String>());
+    private final List<String> readingList = Collections
+            .synchronizedList(new ArrayList<String>());
 
-    private List<String> fieldNameList = Collections.synchronizedList(new ArrayList<String>());
+    private final List<String> fieldNameList = Collections
+            .synchronizedList(new ArrayList<String>());
 
-    private List<String> labels = Collections.synchronizedList(new ArrayList<String>());
+    private List<String> labels = Collections
+            .synchronizedList(new ArrayList<String>());
 
     private volatile long count = 1;
 
@@ -32,7 +34,7 @@ public class SuggestItem {
         return text;
     }
 
-    public void setText(String text) {
+    public void setText(final String text) {
         this.text = text;
     }
 
@@ -40,23 +42,23 @@ public class SuggestItem {
         return readingList;
     }
 
-    public void addReading(String reading) {
-        this.readingList.add(reading);
+    public void addReading(final String reading) {
+        readingList.add(reading);
     }
 
     public List<String> getFieldNameList() {
         return fieldNameList;
     }
 
-    public void addFieldName(String fieldName) {
-        this.fieldNameList.add(fieldName);
+    public void addFieldName(final String fieldName) {
+        fieldNameList.add(fieldName);
     }
 
     public List<String> getLabels() {
         return labels;
     }
 
-    public void setLabels(List<String> labels) {
+    public void setLabels(final List<String> labels) {
         this.labels = labels;
     }
 
@@ -64,7 +66,7 @@ public class SuggestItem {
         return count;
     }
 
-    public void setCount(long count) {
+    public void setCount(final long count) {
         this.count = count;
     }
 
@@ -72,7 +74,7 @@ public class SuggestItem {
         return expires;
     }
 
-    public void setExpires(String expires) {
+    public void setExpires(final String expires) {
         this.expires = expires;
     }
 
@@ -80,7 +82,7 @@ public class SuggestItem {
         return expiresField;
     }
 
-    public void setExpiresField(String expiresField) {
+    public void setExpiresField(final String expiresField) {
         this.expiresField = expiresField;
     }
 
@@ -88,7 +90,7 @@ public class SuggestItem {
         return segment;
     }
 
-    public void setSegment(String segment) {
+    public void setSegment(final String segment) {
         this.segment = segment;
     }
 
@@ -96,15 +98,15 @@ public class SuggestItem {
         return segmentField;
     }
 
-    public void setSegmentField(String segmentField) {
+    public void setSegmentField(final String segmentField) {
         this.segmentField = segmentField;
     }
 
     @Override
-    public boolean equals(Object o) {
+    public boolean equals(final Object o) {
         if (o instanceof SuggestItem) {
-            SuggestItem item = (SuggestItem) o;
-            if (this.getDocumentId().equals(item.getDocumentId())) {
+            final SuggestItem item = (SuggestItem) o;
+            if (getDocumentId().equals(item.getDocumentId())) {
                 return true;
             }
         }
@@ -112,19 +114,20 @@ public class SuggestItem {
     }
 
     public SolrInputDocument toSolrInputDocument() {
-        SolrInputDocument doc = new SolrInputDocument();
+        final SolrInputDocument doc = new SolrInputDocument();
 
         doc.setField(SuggestConstants.SuggestFieldNames.TEXT, text);
-        for (String reading : readingList) {
+        for (final String reading : readingList) {
             doc.addField(SuggestConstants.SuggestFieldNames.READING, reading);
         }
-        for (String fieldName : fieldNameList) {
-            doc.addField(SuggestConstants.SuggestFieldNames.FIELD_NAME, fieldName);
+        for (final String fieldName : fieldNameList) {
+            doc.addField(SuggestConstants.SuggestFieldNames.FIELD_NAME,
+                    fieldName);
         }
         doc.setField(SuggestConstants.SuggestFieldNames.COUNT, count);
         doc.setField(expiresField, expires);
         doc.setField(segmentField, segment);
-        for (String label : labels) {
+        for (final String label : labels) {
             doc.addField(SuggestConstants.SuggestFieldNames.LABELS, label);
         }
         doc.addField("id", getDocumentId());
