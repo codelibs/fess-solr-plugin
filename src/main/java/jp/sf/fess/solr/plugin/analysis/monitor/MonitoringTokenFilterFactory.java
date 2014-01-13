@@ -35,7 +35,7 @@ public class MonitoringTokenFilterFactory extends TokenFilterFactory implements
 
     protected Field currentStateField;
 
-    protected MonitoringTokenFilterFactory(final Map<String, String> args) {
+    public MonitoringTokenFilterFactory(final Map<String, String> args) {
         super(args);
 
         try {
