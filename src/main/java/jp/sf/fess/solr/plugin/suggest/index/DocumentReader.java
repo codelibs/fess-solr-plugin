@@ -25,6 +25,8 @@ public class DocumentReader {
 
     private final List<String> targetLabelFields;
 
+    private final List<String> targetRoleFields;
+
     private final SolrInputDocument solrInputDocument;
 
     private Tokenizer tokenizer;
@@ -50,11 +52,14 @@ public class DocumentReader {
             final SuggestNormalizer suggestNormalizer,
             final SolrInputDocument solrInputDocument,
             final List<String> targetFields,
-            final List<String> targetLabelFields, final String expiresFidld,
+            final List<String> targetLabelFields,
+            final List<String> targetRoleFields,
+            final String expiresFidld,
             final String segmentField) {
         this.solrInputDocument = solrInputDocument;
         this.targetFields = targetFields;
         this.targetLabelFields = targetLabelFields;
+        this.targetRoleFields = targetRoleFields;
         this.tokenizerFactory = tokenizerFactory;
         expiresField = expiresFidld;
         this.segmentField = segmentField;
@@ -133,6 +138,24 @@ public class DocumentReader {
             break;
         }
 
+        final List<String> roles = item.getRoles();
+        for (final String role : targetRoleFields) {
+            final SolrInputField field = solrInputDocument.getField(role);
+            if (field == null) {
+                continue;
+            }
+            final Collection<Object> valList = field.getValues();
+            if (valList == null || valList.size() == 0) {
+                continue;
+            }
+
+            for (final Object val : valList) {
+                roles.add(val.toString());
+            }
+            break;
+        }
+
+
         item.addFieldName(fieldName);
         item.setText(text);
         if (suggestReadingConverter != null) {
@@ -189,7 +212,6 @@ public class DocumentReader {
         if (suggestNormalizer != null) {
             nextFieldString = suggestNormalizer.normalize(nextFieldString);
         }
-
         return nextFieldString;
     }
 }

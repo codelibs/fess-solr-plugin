@@ -20,6 +20,9 @@ public class SuggestItem {
     private List<String> labels = Collections
             .synchronizedList(new ArrayList<String>());
 
+    private List<String> roles = Collections
+            .synchronizedList(new ArrayList<String>());
+
     private volatile long count = 1;
 
     private volatile String expires;
@@ -59,7 +62,21 @@ public class SuggestItem {
     }
 
     public void setLabels(final List<String> labels) {
-        this.labels = labels;
+        this.labels.clear();
+        for(String label: labels) {
+            this.labels.add(label);
+        }
+    }
+
+    public List<String> getRoles() {
+        return roles;
+    }
+
+    public void setRoles(final List<String> roles) {
+        this.roles.clear();
+        for(String label: roles) {
+            this.roles.add(label);
+        }
     }
 
     public long getCount() {
@@ -129,6 +146,9 @@ public class SuggestItem {
         doc.setField(segmentField, segment);
         for (final String label : labels) {
             doc.addField(SuggestConstants.SuggestFieldNames.LABELS, label);
+        }
+        for (final String role : roles) {
+            doc.addField(SuggestConstants.SuggestFieldNames.ROLES, role);
         }
         doc.addField("id", getDocumentId());
 

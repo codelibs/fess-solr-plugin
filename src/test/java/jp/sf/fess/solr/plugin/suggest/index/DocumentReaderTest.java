@@ -21,6 +21,7 @@ public class DocumentReaderTest extends TestCase {
         targetFieldList.add("content");
         targetFieldList.add("content2");
         final List<String> labelFieldList = new ArrayList<String>();
+        final List<String> roleFieldList = new ArrayList<String>();
 
         final TokenizerFactory tokenizerFactory = TestUtils
                 .getTokenizerFactory(TestUtils.getSuggestUpdateConfig());
@@ -31,7 +32,7 @@ public class DocumentReaderTest extends TestCase {
 
         final DocumentReader reader = new DocumentReader(tokenizerFactory,
                 suggestReadingConverter, suggestNormalizer, doc,
-                targetFieldList, labelFieldList, "", "");
+                targetFieldList, labelFieldList, roleFieldList, "", "");
         SuggestItem item;
         try {
             int count = 0;
@@ -85,15 +86,19 @@ public class DocumentReaderTest extends TestCase {
         }
     }
 
-    public void test_getLabelTest() {
+    public void test_getLabelAndRoleTest() {
         final SolrInputDocument doc = new SolrInputDocument();
         doc.setField("content", "検索エンジン");
         doc.addField("label", "label1");
         doc.addField("label", "label2");
+        doc.addField("role", "role1");
+        doc.addField("role", "role2");
         final List<String> targetFieldList = new ArrayList<String>();
         targetFieldList.add("content");
         final List<String> labelFieldList = new ArrayList<String>();
         labelFieldList.add("label");
+        final List<String> roleFieldList = new ArrayList<String>();
+        roleFieldList.add("role");
 
         final TokenizerFactory tokenizerFactory = TestUtils
                 .getTokenizerFactory(TestUtils.getSuggestUpdateConfig());
@@ -104,7 +109,7 @@ public class DocumentReaderTest extends TestCase {
 
         final DocumentReader reader = new DocumentReader(tokenizerFactory,
                 suggestReadingConverter, suggestNormalizer, doc,
-                targetFieldList, labelFieldList, "", "");
+                targetFieldList, labelFieldList, roleFieldList, "", "");
         SuggestItem item;
         try {
             int count = 0;
@@ -118,6 +123,10 @@ public class DocumentReaderTest extends TestCase {
                         assertTrue(label.equals("label1")
                                 || label.equals("label2"));
                     }
+                    for (final String role : item.getRoles()) {
+                        assertTrue(role.equals("role1")
+                                || role.equals("role2"));
+                    }
                     break;
                 case 1:
                     assertEquals("エンジン", item.getText());
@@ -126,6 +135,10 @@ public class DocumentReaderTest extends TestCase {
                     for (final String label : item.getLabels()) {
                         assertTrue(label.equals("label1")
                                 || label.equals("label2"));
+                    }
+                    for (final String role : item.getRoles()) {
+                        assertTrue(role.equals("role1")
+                                || role.equals("role2"));
                     }
                     break;
                 case 2:
@@ -136,6 +149,10 @@ public class DocumentReaderTest extends TestCase {
                     for (final String label : item.getLabels()) {
                         assertTrue(label.equals("label1")
                                 || label.equals("label2"));
+                    }
+                    for (final String role : item.getRoles()) {
+                        assertTrue(role.equals("role1")
+                                || role.equals("role2"));
                     }
                     break;
                 }

@@ -91,6 +91,7 @@ public class SuggestSolrServer {
         solrQuery.setFields(new String[] { "id",
                 SuggestConstants.SuggestFieldNames.COUNT,
                 SuggestConstants.SuggestFieldNames.LABELS,
+                SuggestConstants.SuggestFieldNames.ROLES,
                 SuggestConstants.SuggestFieldNames.FIELD_NAME });
         final QueryResponse queryResponse = server.query(solrQuery,
                 SolrRequest.METHOD.POST);

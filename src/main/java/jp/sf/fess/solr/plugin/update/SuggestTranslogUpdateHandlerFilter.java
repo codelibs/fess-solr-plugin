@@ -49,6 +49,11 @@ public class SuggestTranslogUpdateHandlerFilter extends UpdateHandlerFilter {
                     suggestUpdateController.addLabelFieldName(label);
                 }
             }
+            if (config.getRoleFields() != null) {
+                for (final String role : config.getRoleFields()) {
+                    suggestUpdateController.addRoleFieldName(role);
+                }
+            }
             suggestUpdateController.setLimitDocumentQueuingNum(2);
             suggestUpdateController.start();
         } catch (final Exception e) {

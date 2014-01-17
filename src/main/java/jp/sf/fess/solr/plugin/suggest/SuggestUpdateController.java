@@ -43,6 +43,9 @@ public class SuggestUpdateController {
     protected final List<String> labelFieldNameList = Collections
             .synchronizedList(new ArrayList<String>());
 
+    protected final List<String> roleFieldNameList = Collections
+            .synchronizedList(new ArrayList<String>());
+
     protected final List<SuggestFieldInfo> suggestFieldInfoList;
 
     protected final SuggestUpdateConfig config;
@@ -149,6 +152,10 @@ public class SuggestUpdateController {
         labelFieldNameList.add(labelFieldName);
     }
 
+    public void addRoleFieldName(final String roleFieldName) {
+        roleFieldNameList.add(roleFieldName);
+    }
+
     protected class UpdateTask extends Thread {
         protected AtomicBoolean isRunning = new AtomicBoolean(false);
 
@@ -184,7 +191,7 @@ public class SuggestUpdateController {
                         final SolrInputDocument doc = (SolrInputDocument) request.obj;
                         final DocumentReader reader = new DocumentReader(
                                 tokenizerFactory, converter, normalizer, doc,
-                                fieldNameList, labelFieldNameList,
+                                fieldNameList, labelFieldNameList, roleFieldNameList,
                                 config.getExpiresField(),
                                 config.getSegmentField());
                         SuggestItem item;

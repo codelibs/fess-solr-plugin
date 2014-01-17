@@ -64,11 +64,18 @@ public class IndexUpdater extends Thread {
                             fieldNameList.add(fieldName);
                         }
                     }
-                    final List<String> labelFieldNameList = existItem
+                    final List<String> labelList = existItem
                             .getLabels();
                     for (final String label : item.getLabels()) {
-                        if (!labelFieldNameList.contains(label)) {
-                            labelFieldNameList.add(label);
+                        if (!labelList.contains(label)) {
+                            labelList.add(label);
+                        }
+                    }
+                    final List<String> roleList = existItem
+                            .getRoles();
+                    for (final String role : item.getRoles()) {
+                        if (!roleList.contains(role)) {
+                            roleList.add(role);
                         }
                     }
                     break;
@@ -266,6 +273,18 @@ public class IndexUpdater extends Thread {
                                     if (!itemLabelList.contains(label
                                             .toString())) {
                                         itemLabelList.add(label.toString());
+                                    }
+                                }
+                            }
+                            final Collection<Object> roles = doc
+                                    .getFieldValues(SuggestConstants.SuggestFieldNames.ROLES);
+                            if (roles != null) {
+                                final List<String> itemRoleList = item
+                                        .getRoles();
+                                for (final Object role : roles) {
+                                    if (!itemRoleList.contains(role
+                                            .toString())) {
+                                        itemRoleList.add(role.toString());
                                     }
                                 }
                             }

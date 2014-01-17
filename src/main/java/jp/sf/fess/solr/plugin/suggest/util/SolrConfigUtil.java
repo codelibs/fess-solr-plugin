@@ -60,6 +60,11 @@ public class SolrConfigUtil {
         if (StringUtils.isNotBlank(labelFields)) {
             suggestUpdateConfig.setLabelFields(labelFields.trim().split(","));
         }
+        final String roleFields = config.getVal("updateHandler/roleFields",
+                false);
+        if (StringUtils.isNotBlank(roleFields)) {
+            suggestUpdateConfig.setRoleFields(roleFields.trim().split(","));
+        }
 
         final String expiresField = config.getVal("updateHandler/expiresField",
                 false);

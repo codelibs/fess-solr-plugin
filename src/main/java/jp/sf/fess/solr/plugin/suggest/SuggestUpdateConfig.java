@@ -13,6 +13,8 @@ public class SuggestUpdateConfig {
 
     private String[] labelFields = null;
 
+    private String[] roleFields = null;
+
     private long updateInterval = 10 * 1000;
 
     private String expiresField = "expires_dt";
@@ -75,6 +77,14 @@ public class SuggestUpdateConfig {
 
     public void setLabelFields(final String[] labelFields) {
         this.labelFields = labelFields;
+    }
+
+    public String[] getRoleFields() {
+        return roleFields;
+    }
+
+    public void setRoleFields(final String[] roleFields) {
+        this.roleFields = roleFields;
     }
 
     public List<FieldConfig> getFieldConfigList() {

@@ -266,7 +266,7 @@ public class SuggestUpdateControllerTest extends TestCase {
         }
     }
 
-    public void test_incrementCount() {
+    public void test_incrementUpdate() {
         final SuggestSolrServer suggestSolrServer = TestUtils
                 .createSuggestSolrServer();
 
@@ -279,12 +279,14 @@ public class SuggestUpdateControllerTest extends TestCase {
             final SuggestUpdateController controller = new SuggestUpdateController(
                     config, getSuggestFieldInfoList(config, false));
             controller.addLabelFieldName("label");
+            controller.addRoleFieldName("role");
             controller.start();
 
             final SolrInputDocument doc = new SolrInputDocument();
             for (int i = 0; i < 5; i++) {
                 doc.setField("content", "みかん");
                 doc.setField("label", "label" + i);
+                doc.setField("role", "role" + i);
                 doc.setField(config.getExpiresField(), DateUtil
                         .getThreadLocalDateFormat().format(new Date()));
                 controller.add(doc);
@@ -304,6 +306,12 @@ public class SuggestUpdateControllerTest extends TestCase {
             assertEquals(5, labels.size());
             for (int i = 0; i < 5; i++) {
                 assertTrue(labels.contains("label" + i));
+            }
+            final Collection<Object> roles = solrDocument
+                    .getFieldValues(SuggestConstants.SuggestFieldNames.ROLES);
+            assertEquals(5, roles.size());
+            for (int i = 0; i < 5; i++) {
+                assertTrue(roles.contains("role" + i));
             }
         } catch (final Exception e) {
             e.printStackTrace();
