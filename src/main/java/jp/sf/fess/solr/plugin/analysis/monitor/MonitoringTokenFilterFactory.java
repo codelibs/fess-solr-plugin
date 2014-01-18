@@ -5,7 +5,7 @@ import java.lang.reflect.Field;
 import java.util.HashMap;
 import java.util.Map;
 
-import jp.sf.fess.solr.plugin.util.MonitoringFileUtil;
+import jp.sf.fess.solr.plugin.util.MonitoringUtil;
 
 import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.util.ResourceLoader;
@@ -25,7 +25,7 @@ public class MonitoringTokenFilterFactory extends TokenFilterFactory implements
 
     protected String baseClass;
 
-    protected MonitoringFileTask monitoringFileTask;
+    protected MonitoringTask monitoringTask;
 
     protected volatile long factoryTimestamp;
 
@@ -58,21 +58,21 @@ public class MonitoringTokenFilterFactory extends TokenFilterFactory implements
     @Override
     public void inform(final ResourceLoader loader) throws IOException {
         this.loader = loader;
-        final Map<String, String> monitorArgs = MonitoringFileUtil
+        final Map<String, String> monitorArgs = MonitoringUtil
                 .createMonitorArgs(baseArgs);
 
-        baseClass = MonitoringFileUtil.initBaseArgs(baseArgs,
+        baseClass = MonitoringUtil.initBaseArgs(baseArgs,
                 luceneMatchVersion.toString());
 
-        baseTokenFilterFactory = MonitoringFileUtil.createFactory(baseClass,
+        baseTokenFilterFactory = MonitoringUtil.createFactory(baseClass,
                 baseArgs, loader);
         factoryTimestamp = System.currentTimeMillis();
 
-        monitoringFileTask = MonitoringFileUtil.createMonitoringFileTask(
-                monitorArgs, loader, new MonitoringFileTask.Callback() {
+        monitoringTask = MonitoringUtil.createMonitoringTask(
+                monitorArgs, loader, new MonitoringTask.Callback() {
                     @Override
                     public void process() {
-                        baseTokenFilterFactory = MonitoringFileUtil
+                        baseTokenFilterFactory = MonitoringUtil
                                 .createFactory(baseClass, baseArgs, loader);
                         factoryTimestamp = System.currentTimeMillis();
                     }
@@ -118,7 +118,7 @@ public class MonitoringTokenFilterFactory extends TokenFilterFactory implements
             }
             tokenStream.reset();
 
-            monitoringFileTask.process();
+            monitoringTask.process();
         }
 
         @Override

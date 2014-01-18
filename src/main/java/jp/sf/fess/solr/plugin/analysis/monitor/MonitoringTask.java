@@ -1,11 +1,9 @@
 package jp.sf.fess.solr.plugin.analysis.monitor;
 
-import java.io.File;
-
-public class MonitoringFileTask {
+public class MonitoringTask {
     private static final boolean VERBOSE = true; // debug
 
-    protected File file;
+    protected Target target;
 
     protected long interval;
 
@@ -17,13 +15,13 @@ public class MonitoringFileTask {
 
     public static final int DEFAULT_PERIOD = 60000;
 
-    public MonitoringFileTask(final File file, final long interval,
+    public MonitoringTask(final Target target, final long interval,
             final Callback callback) {
-        this.file = file;
+        this.target = target;
         this.interval = interval;
         this.callback = callback;
 
-        lastModified = file.lastModified();
+        lastModified = target.lastModified();
     }
 
     public void process() {
@@ -40,9 +38,9 @@ public class MonitoringFileTask {
             }
 
             lastChecked = now;
-            final long currentLastModified = file.lastModified();
+            final long currentLastModified = target.lastModified();
             if (VERBOSE) {
-                System.out.println("Monitoring " + file + " (" + lastModified
+                System.out.println("Monitoring " + target + " (" + lastModified
                         + "," + currentLastModified + ")");
             }
             try {
@@ -66,8 +64,10 @@ public class MonitoringFileTask {
     }
 
     public interface Callback {
-
         void process();
+    }
 
+    public interface Target {
+        long lastModified();
     }
 }

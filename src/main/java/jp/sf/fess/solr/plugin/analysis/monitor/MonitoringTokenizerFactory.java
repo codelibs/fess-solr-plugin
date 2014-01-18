@@ -6,7 +6,7 @@ import java.lang.reflect.Field;
 import java.util.HashMap;
 import java.util.Map;
 
-import jp.sf.fess.solr.plugin.util.MonitoringFileUtil;
+import jp.sf.fess.solr.plugin.util.MonitoringUtil;
 
 import org.apache.lucene.analysis.Tokenizer;
 import org.apache.lucene.analysis.util.ResourceLoader;
@@ -54,7 +54,7 @@ public class MonitoringTokenizerFactory extends TokenizerFactory implements
 
     protected long lastCheckedTime;
 
-    protected MonitoringFileTask monitoringFileTask;
+    protected MonitoringTask monitoringFileTask;
 
     public MonitoringTokenizerFactory(final Map<String, String> args) {
         super(args);
@@ -82,21 +82,21 @@ public class MonitoringTokenizerFactory extends TokenizerFactory implements
     @Override
     public void inform(final ResourceLoader loader) throws IOException {
         this.loader = loader;
-        final Map<String, String> monitorArgs = MonitoringFileUtil
+        final Map<String, String> monitorArgs = MonitoringUtil
                 .createMonitorArgs(baseArgs);
 
-        baseClass = MonitoringFileUtil.initBaseArgs(baseArgs,
+        baseClass = MonitoringUtil.initBaseArgs(baseArgs,
                 luceneMatchVersion.toString());
 
-        baseTokenizerFactory = MonitoringFileUtil.createFactory(baseClass,
+        baseTokenizerFactory = MonitoringUtil.createFactory(baseClass,
                 baseArgs, loader);
         factoryTimestamp = System.currentTimeMillis();
 
-        monitoringFileTask = MonitoringFileUtil.createMonitoringFileTask(
-                monitorArgs, loader, new MonitoringFileTask.Callback() {
+        monitoringFileTask = MonitoringUtil.createMonitoringTask(
+                monitorArgs, loader, new MonitoringTask.Callback() {
                     @Override
                     public void process() {
-                        baseTokenizerFactory = MonitoringFileUtil
+                        baseTokenizerFactory = MonitoringUtil
                                 .createFactory(baseClass, baseArgs, loader);
                         factoryTimestamp = System.currentTimeMillis();
                     }
