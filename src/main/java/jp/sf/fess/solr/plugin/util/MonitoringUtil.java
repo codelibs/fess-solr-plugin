@@ -156,14 +156,16 @@ public class MonitoringUtil {
     }
 
     public static class ZkMonitoringTarget implements Target {
-        private String pathname;
+        private final String pathname;
 
-        private ResourceLoader loader;
+        private final ResourceLoader loader;
 
         private File file;
 
         public ZkMonitoringTarget(final ResourceLoader loader,
                 final String pathname) throws IOException {
+            this.loader = loader;
+            this.pathname = pathname;
             file = File.createTempFile("zk_mon_", ".tmp");
             updateFile(file);
         }
