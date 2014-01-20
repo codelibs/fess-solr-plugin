@@ -41,43 +41,43 @@ public class SolrConfigUtil {
         final SuggestUpdateConfig suggestUpdateConfig = new SuggestUpdateConfig();
 
         //setting config
-        final String solrUrl = config.getVal("updateHandler/solrUrl", false);
+        final String solrUrl = config.getVal("updateHandler/suggest/solrUrl", false);
         if (StringUtils.isNotBlank(solrUrl)) {
             suggestUpdateConfig.setSolrUrl(solrUrl);
         }
 
-        final String solrUser = config.getVal("updateHandler/solrUser", false);
+        final String solrUser = config.getVal("updateHandler/suggest/solrUser", false);
         if (StringUtils.isNotBlank(solrUser)) {
             suggestUpdateConfig.setSolrUser(solrUser);
         }
-        final String solrPassword = config.getVal("updateHandler/solrPassword",
+        final String solrPassword = config.getVal("updateHandler/suggest/solrPassword",
                 false);
         if (StringUtils.isNotBlank(solrPassword)) {
             suggestUpdateConfig.setSolrPassword(solrPassword);
         }
-        final String labelFields = config.getVal("updateHandler/labelFields",
+        final String labelFields = config.getVal("updateHandler/suggest/labelFields",
                 false);
         if (StringUtils.isNotBlank(labelFields)) {
             suggestUpdateConfig.setLabelFields(labelFields.trim().split(","));
         }
-        final String roleFields = config.getVal("updateHandler/roleFields",
+        final String roleFields = config.getVal("updateHandler/suggest/roleFields",
                 false);
         if (StringUtils.isNotBlank(roleFields)) {
             suggestUpdateConfig.setRoleFields(roleFields.trim().split(","));
         }
 
-        final String expiresField = config.getVal("updateHandler/expiresField",
+        final String expiresField = config.getVal("updateHandler/suggest/expiresField",
                 false);
         if (StringUtils.isNotBlank(expiresField)) {
             suggestUpdateConfig.setExpiresField(expiresField);
         }
-        final String segmentField = config.getVal("updateHandler/segmentField",
+        final String segmentField = config.getVal("updateHandler/suggest/segmentField",
                 false);
         if (StringUtils.isNotBlank(segmentField)) {
             suggestUpdateConfig.setSegmentField(segmentField);
         }
         final String updateInterval = config.getVal(
-                "updateHandler/updateInterval", false);
+                "updateHandler/suggest/updateInterval", false);
         if (StringUtils.isNotBlank(updateInterval)
                 && StringUtils.isNumeric(updateInterval)) {
             suggestUpdateConfig.setUpdateInterval(Long
@@ -85,7 +85,7 @@ public class SolrConfigUtil {
         }
 
         final NodeList nodeList = config.getNodeList(
-                "updateHandler/suggestFieldInfo", true);
+                "updateHandler/suggest/suggestFieldInfo", true);
         for (int i = 0; i < nodeList.getLength(); i++) {
             try {
                 final SuggestUpdateConfig.FieldConfig fieldConfig = new SuggestUpdateConfig.FieldConfig();
