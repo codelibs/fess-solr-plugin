@@ -78,7 +78,7 @@ public class WordFreqValueSourceParser extends ValueSourceParser {
 
         @Override
         public boolean equals(final Object o) {
-            if (this.getClass() != o.getClass()) {
+            if (o == null || this.getClass() != o.getClass()) {
                 return false;
             }
             final WordFreqValueSource other = (WordFreqValueSource) o;

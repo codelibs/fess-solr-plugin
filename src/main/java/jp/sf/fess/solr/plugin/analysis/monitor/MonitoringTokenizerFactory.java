@@ -92,12 +92,12 @@ public class MonitoringTokenizerFactory extends TokenizerFactory implements
                 baseArgs, loader);
         factoryTimestamp = System.currentTimeMillis();
 
-        monitoringFileTask = MonitoringUtil.createMonitoringTask(
-                monitorArgs, loader, new MonitoringTask.Callback() {
+        monitoringFileTask = MonitoringUtil.createMonitoringTask(monitorArgs,
+                loader, new MonitoringTask.Callback() {
                     @Override
                     public void process() {
-                        baseTokenizerFactory = MonitoringUtil
-                                .createFactory(baseClass, baseArgs, loader);
+                        baseTokenizerFactory = MonitoringUtil.createFactory(
+                                baseClass, baseArgs, loader);
                         factoryTimestamp = System.currentTimeMillis();
                     }
                 });
@@ -140,7 +140,7 @@ public class MonitoringTokenizerFactory extends TokenizerFactory implements
                     System.out
                             .println("Update Tokenizer/" + baseClass + " ("
                                     + tokenizerTimestamp + ","
-                                    + factoryTimestamp + ")");
+                                    + factoryTimestamp + ")"); // NOSONAR
                 }
                 tokenizer = createTokenizer(inputPending);
             } else if (inputPending != ILLEGAL_STATE_READER) {
@@ -186,23 +186,23 @@ public class MonitoringTokenizerFactory extends TokenizerFactory implements
 
         protected Tokenizer createTokenizer(final Reader inputPending) {
             tokenizerTimestamp = factoryTimestamp;
-            final Tokenizer tokenizer = baseTokenizerFactory.create(factory,
+            final Tokenizer newTokenizer = baseTokenizerFactory.create(factory,
                     inputPending);
 
             try {
-                final Object attributesObj = attributesField.get(tokenizer);
+                final Object attributesObj = attributesField.get(newTokenizer);
                 attributesField.set(this, attributesObj);
                 final Object attributeImplsObj = attributeImplsField
-                        .get(tokenizer);
+                        .get(newTokenizer);
                 attributeImplsField.set(this, attributeImplsObj);
-                final Object currentStateObj = currentStateField.get(tokenizer);
+                final Object currentStateObj = currentStateField.get(newTokenizer);
                 currentStateField.set(this, currentStateObj);
             } catch (final Exception e) {
                 throw new IllegalStateException(
                         "Failed to update the tokenizer.", e);
             }
 
-            return tokenizer;
+            return newTokenizer;
         }
 
     }

@@ -41,7 +41,7 @@ public class MonitoringTask {
             final long currentLastModified = target.lastModified();
             if (VERBOSE) {
                 System.out.println("Monitoring " + target + " (" + lastModified
-                        + "," + currentLastModified + ")");
+                        + "," + currentLastModified + ")"); // NOSONAR
             }
             try {
                 if (currentLastModified > lastModified) {
@@ -57,7 +57,7 @@ public class MonitoringTask {
             } catch (final Exception e) {
                 // ignore
                 if (VERBOSE) {
-                    e.printStackTrace();
+                    e.printStackTrace(); // NOSONAR
                 }
             }
         }

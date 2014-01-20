@@ -26,7 +26,7 @@ import org.apache.solr.core.SolrResourceLoader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class MonitoringUtil {
+public final class MonitoringUtil {
     protected final static Logger log = LoggerFactory
             .getLogger(MonitoringUtil.class);
 
@@ -63,7 +63,7 @@ public class MonitoringUtil {
     public static <T> T createFactory(final String className,
             final Map<String, String> baseArgs, final ResourceLoader loader) {
         if (VERBOSE) {
-            System.out.println("Create " + className + " with " + baseArgs);
+            System.out.println("Create " + className + " with " + baseArgs); // NOSONAR
         }
 
         try {
@@ -117,7 +117,7 @@ public class MonitoringUtil {
                 : Long.parseLong(monitoringPeriodStr);
         if (VERBOSE) {
             System.out.println("Create MonitoringFileTask(" + monitoringPeriod
-                    + "ms) to monitor " + monitoringFilePath);
+                    + "ms) to monitor " + monitoringFilePath); // NOSONAR
         }
 
         return new MonitoringTask(monitoringTarget, monitoringPeriod, callback);
@@ -151,7 +151,20 @@ public class MonitoringUtil {
                     + file2.getAbsolutePath(), e);
             return false;
         } finally {
-            IOUtils.closeWhileHandlingException(is1, is2);
+            if (is1 != null) {
+                try {
+                    is1.close();
+                } catch (final IOException e) {
+                    // ignore
+                }
+            }
+            if (is2 != null) {
+                try {
+                    is2.close();
+                } catch (final IOException e) {
+                    // ignore
+                }
+            }
         }
     }
 

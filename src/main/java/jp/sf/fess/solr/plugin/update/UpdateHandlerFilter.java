@@ -9,7 +9,7 @@ import org.apache.solr.update.MergeIndexesCommand;
 import org.apache.solr.update.RollbackUpdateCommand;
 import org.apache.solr.update.SplitIndexCommand;
 
-public abstract class UpdateHandlerFilter {
+public class UpdateHandlerFilter {
 
     protected FessUpdateHandler updateHandler;
 

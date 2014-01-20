@@ -68,12 +68,12 @@ public class MonitoringTokenFilterFactory extends TokenFilterFactory implements
                 baseArgs, loader);
         factoryTimestamp = System.currentTimeMillis();
 
-        monitoringTask = MonitoringUtil.createMonitoringTask(
-                monitorArgs, loader, new MonitoringTask.Callback() {
+        monitoringTask = MonitoringUtil.createMonitoringTask(monitorArgs,
+                loader, new MonitoringTask.Callback() {
                     @Override
                     public void process() {
-                        baseTokenFilterFactory = MonitoringUtil
-                                .createFactory(baseClass, baseArgs, loader);
+                        baseTokenFilterFactory = MonitoringUtil.createFactory(
+                                baseClass, baseArgs, loader);
                         factoryTimestamp = System.currentTimeMillis();
                     }
                 });
@@ -112,7 +112,7 @@ public class MonitoringTokenFilterFactory extends TokenFilterFactory implements
                 if (VERBOSE) {
                     System.out.println("Update TokenStream/" + baseClass + " ("
                             + tokenStreamTimestamp + "," + factoryTimestamp
-                            + ")");
+                            + ")"); // NOSONAR
                 }
                 tokenStream = createTokenStream(input);
             }
@@ -148,24 +148,24 @@ public class MonitoringTokenFilterFactory extends TokenFilterFactory implements
 
         protected TokenStream createTokenStream(final TokenStream input) {
             tokenStreamTimestamp = factoryTimestamp;
-            final TokenStream tokenStream = baseTokenFilterFactory
+            final TokenStream newTokenStream = baseTokenFilterFactory
                     .create(input);
 
             try {
-                final Object attributesObj = attributesField.get(tokenStream);
+                final Object attributesObj = attributesField.get(newTokenStream);
                 attributesField.set(this, attributesObj);
                 final Object attributeImplsObj = attributeImplsField
-                        .get(tokenStream);
+                        .get(newTokenStream);
                 attributeImplsField.set(this, attributeImplsObj);
                 final Object currentStateObj = currentStateField
-                        .get(tokenStream);
+                        .get(newTokenStream);
                 currentStateField.set(this, currentStateObj);
             } catch (final Exception e) {
                 throw new IllegalStateException(
                         "Failed to update the tokenStream.", e);
             }
 
-            return tokenStream;
+            return newTokenStream;
         }
 
     }
