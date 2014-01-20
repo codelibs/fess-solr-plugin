@@ -45,47 +45,10 @@ public class IndexUpdater extends Thread {
         return suggestRequestQueue.size();
     }
 
-    public synchronized void addSuggestItem(final SuggestItem item) {
-        boolean exist = false;
-        final Iterator<Request> it = suggestRequestQueue.iterator();
-        while (it.hasNext()) {
-            final Request request = it.next();
-            if (request.type == RequestType.ADD) {
-                final SuggestItem existItem = (SuggestItem) request.obj;
-                if (existItem.equals(item)) {
-                    exist = true;
-                    existItem.setCount(existItem.getCount() + 1);
-                    existItem.setExpires(item.getExpires());
-                    existItem.setSegment(item.getSegment());
-                    final List<String> fieldNameList = existItem
-                            .getFieldNameList();
-                    for (final String fieldName : item.getFieldNameList()) {
-                        if (!fieldNameList.contains(fieldName)) {
-                            fieldNameList.add(fieldName);
-                        }
-                    }
-                    final List<String> labelList = existItem
-                            .getLabels();
-                    for (final String label : item.getLabels()) {
-                        if (!labelList.contains(label)) {
-                            labelList.add(label);
-                        }
-                    }
-                    final List<String> roleList = existItem
-                            .getRoles();
-                    for (final String role : item.getRoles()) {
-                        if (!roleList.contains(role)) {
-                            roleList.add(role);
-                        }
-                    }
-                    break;
-                }
-            }
-        }
-
-        if (!exist) {
-            final Request request = new Request(RequestType.ADD, item);
-            suggestRequestQueue.add(request);
+    public void addSuggestItem(final SuggestItem item) {
+        final Request request = new Request(RequestType.ADD, item);
+        suggestRequestQueue.add(request);
+        synchronized (this) {
             notify();
         }
     }
@@ -119,22 +82,33 @@ public class IndexUpdater extends Thread {
             final int maxUpdateNum = this.maxUpdateNum.get();
             final Request[] requestArray = new Request[maxUpdateNum];
             int requestNum = 0;
-            synchronized (this) {
-                for (int i = 0; i < maxUpdateNum; i++) {
-                    final Request request = suggestRequestQueue.peek();
-                    if (request == null) {
-                        break;
+            for (int i = 0; i < maxUpdateNum; i++) {
+                final Request request = suggestRequestQueue.peek();
+                if (request == null) {
+                    break;
+                }
+                if (request.type == RequestType.ADD) {
+                    suggestRequestQueue.poll();
+                    boolean exist = false;
+                    final SuggestItem item2 = (SuggestItem) request.obj;
+                    for (int j = 0; j < requestNum; j++) {
+                        final SuggestItem item1 = (SuggestItem) requestArray[j].obj;
+                        if (item1.equals(item2)) {
+                            mergeSuggestItem(item1, item2);
+                            exist = true;
+                            break;
+                        }
                     }
-                    if (request.type == RequestType.ADD) {
-                        requestArray[requestNum] = suggestRequestQueue.poll();
+                    if (!exist) {
+                        requestArray[requestNum] = request;
                         requestNum++;
-                    } else if (requestNum == 0) {
-                        requestArray[requestNum] = suggestRequestQueue.poll();
-                        requestNum++;
-                        break;
-                    } else {
-                        break;
                     }
+                } else if (requestNum == 0) {
+                    requestArray[requestNum] = suggestRequestQueue.poll();
+                    requestNum++;
+                    break;
+                } else {
+                    break;
                 }
             }
 
@@ -158,69 +132,69 @@ public class IndexUpdater extends Thread {
             doCommit = true;
 
             switch (requestArray[0].type) {
-            case ADD:
-                final long start = System.currentTimeMillis();
-                if (logger.isDebugEnabled()) {
-                    logger.debug("Add " + requestNum + "documents");
-                }
-
-                final SuggestItem[] suggestItemArray = new SuggestItem[requestNum];
-                int itemSize = 0;
-                final StringBuilder ids = new StringBuilder(10000);
-                for (int i = 0; i < requestNum; i++) {
-                    final Request request = requestArray[i];
-                    final SuggestItem item = (SuggestItem) request.obj;
-                    suggestItemArray[itemSize] = item;
-                    if (ids.length() > 0) {
-                        ids.append(',');
+                case ADD:
+                    final long start = System.currentTimeMillis();
+                    if (logger.isDebugEnabled()) {
+                        logger.debug("Add " + requestNum + "documents");
                     }
-                    ids.append(item.getDocumentId());
-                    itemSize++;
-                }
-                mergeSolrIndex(suggestItemArray, itemSize, ids.toString());
 
-                final List<SolrInputDocument> solrInputDocumentList = new ArrayList<SolrInputDocument>(
-                        itemSize);
-                for (int i = 0; i < itemSize; i++) {
-                    final SuggestItem item = suggestItemArray[i];
-                    solrInputDocumentList.add(item.toSolrInputDocument());
-                }
-                try {
-                    suggestSolrServer.add(solrInputDocumentList);
+                    final SuggestItem[] suggestItemArray = new SuggestItem[requestNum];
+                    int itemSize = 0;
+                    final StringBuilder ids = new StringBuilder(10000);
+                    for (int i = 0; i < requestNum; i++) {
+                        final Request request = requestArray[i];
+                        final SuggestItem item = (SuggestItem) request.obj;
+                        suggestItemArray[itemSize] = item;
+                        if (ids.length() > 0) {
+                            ids.append(',');
+                        }
+                        ids.append(item.getDocumentId());
+                        itemSize++;
+                    }
+                    mergeSolrIndex(suggestItemArray, itemSize, ids.toString());
+
+                    final List<SolrInputDocument> solrInputDocumentList = new ArrayList<SolrInputDocument>(
+                            itemSize);
+                    for (int i = 0; i < itemSize; i++) {
+                        final SuggestItem item = suggestItemArray[i];
+                        solrInputDocumentList.add(item.toSolrInputDocument());
+                    }
+                    try {
+                        suggestSolrServer.add(solrInputDocumentList);
+                        if (logger.isInfoEnabled()) {
+                            logger.info("Done add " + itemSize + " terms. took: "
+                                    + (System.currentTimeMillis() - start));
+                        }
+                    } catch (final Exception e) {
+                        logger.warn("Failed to add document.", e);
+                    }
+                    break;
+                case COMMIT:
+                    if (logger.isDebugEnabled()) {
+                        logger.debug("Commit.");
+                    }
+                    try {
+                        suggestSolrServer.commit();
+                        doCommit = false;
+                    } catch (final Exception e) {
+                        logger.warn("Failed to commit.", e);
+                    }
+                    break;
+                case DELETE_BY_QUERY:
                     if (logger.isInfoEnabled()) {
-                        logger.info("Done add " + itemSize + " terms. took: "
-                                + (System.currentTimeMillis() - start));
+                        logger.info("DeleteByQuery. query="
+                                + requestArray[0].obj.toString());
                     }
-                } catch (final Exception e) {
-                    logger.warn("Failed to add document.", e);
-                }
-                break;
-            case COMMIT:
-                if (logger.isDebugEnabled()) {
-                    logger.debug("Commit.");
-                }
-                try {
-                    suggestSolrServer.commit();
-                    doCommit = false;
-                } catch (final Exception e) {
-                    logger.warn("Failed to commit.", e);
-                }
-                break;
-            case DELETE_BY_QUERY:
-                if (logger.isInfoEnabled()) {
-                    logger.info("DeleteByQuery. query="
-                            + requestArray[0].obj.toString());
-                }
-                try {
-                    suggestSolrServer
-                            .deleteByQuery((String) requestArray[0].obj);
-                    suggestSolrServer.commit();
-                } catch (final Exception e) {
-                    logger.warn("Failed to deleteByQuery.", e);
-                }
-                break;
-            default:
-                break;
+                    try {
+                        suggestSolrServer
+                                .deleteByQuery((String) requestArray[0].obj);
+                        suggestSolrServer.commit();
+                    } catch (final Exception e) {
+                        logger.warn("Failed to deleteByQuery.", e);
+                    }
+                    break;
+                default:
+                    break;
             }
         }
 
@@ -231,7 +205,7 @@ public class IndexUpdater extends Thread {
     }
 
     protected void mergeSolrIndex(final SuggestItem[] suggestItemArray,
-            final int itemSize, final String ids) {
+                                  final int itemSize, final String ids) {
         final long startTime = System.currentTimeMillis();
         if (itemSize > 0) {
             SolrDocumentList documentList = null;
@@ -304,6 +278,33 @@ public class IndexUpdater extends Thread {
                         }
                     }
                 }
+            }
+        }
+    }
+
+    protected void mergeSuggestItem(SuggestItem item1, SuggestItem item2) {
+        item1.setCount(item1.getCount() + 1);
+        item1.setExpires(item2.getExpires());
+        item1.setSegment(item2.getSegment());
+        final List<String> fieldNameList = item1
+                .getFieldNameList();
+        for (final String fieldName : item2.getFieldNameList()) {
+            if (!fieldNameList.contains(fieldName)) {
+                fieldNameList.add(fieldName);
+            }
+        }
+        final List<String> labelList = item1
+                .getLabels();
+        for (final String label : item2.getLabels()) {
+            if (!labelList.contains(label)) {
+                labelList.add(label);
+            }
+        }
+        final List<String> roleList = item1
+                .getRoles();
+        for (final String role : item2.getRoles()) {
+            if (!roleList.contains(role)) {
+                roleList.add(role);
             }
         }
     }

@@ -77,13 +77,13 @@ public class SuggestUpdateControllerTest extends TestCase {
             suggester.setConverter(TestUtils.createConverter());
 
             String q = suggester.buildSuggestQuery("jav",
-                    Arrays.asList(new String[] { "content" }), null);
+                    Arrays.asList(new String[] { "content" }), null, null);
             assertTrue(suggestSolrServer.select(q).getNumFound() > 0);
             q = suggester.buildSuggestQuery("kensakuenj",
-                    Arrays.asList(new String[] { "content" }), null);
+                    Arrays.asList(new String[] { "content" }), null, null);
             assertTrue(suggestSolrServer.select(q).getNumFound() > 0);
             q = suggester.buildSuggestQuery("inde",
-                    Arrays.asList(new String[] { "content" }), null);
+                    Arrays.asList(new String[] { "content" }), null, null);
             assertTrue(suggestSolrServer.select(q).getNumFound() > 0);
 
         } catch (final Exception e) {
@@ -140,10 +140,10 @@ public class SuggestUpdateControllerTest extends TestCase {
             suggester.setConverter(TestUtils.createConverter());
 
             String q = suggester.buildSuggestQuery("fessnituitenosetumei",
-                    Arrays.asList(new String[] { "title" }), null);
+                    Arrays.asList(new String[] { "title" }), null, null);
             assertEquals(1, suggestSolrServer.select(q).getNumFound());
             q = suggester.buildSuggestQuery("fessnituitenosetumei",
-                    Arrays.asList(new String[] { "content" }), null);
+                    Arrays.asList(new String[] { "content" }), null, null);
             assertEquals(0, suggestSolrServer.select(q).getNumFound());
         } catch (final Exception e) {
             e.printStackTrace();
