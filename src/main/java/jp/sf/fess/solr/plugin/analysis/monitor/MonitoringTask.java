@@ -40,8 +40,8 @@ public class MonitoringTask {
             lastChecked = now;
             final long currentLastModified = target.lastModified();
             if (VERBOSE) {
-                System.out.println("Monitoring " + target + " (" + lastModified
-                        + "," + currentLastModified + ")"); // NOSONAR
+                System.out.println("Monitoring " + target + " (" + lastModified // NOSONAR
+                        + "," + currentLastModified + ")");
             }
             try {
                 if (currentLastModified > lastModified) {

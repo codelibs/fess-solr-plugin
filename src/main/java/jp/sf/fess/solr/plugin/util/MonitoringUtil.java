@@ -27,7 +27,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public final class MonitoringUtil {
-    protected final static Logger log = LoggerFactory
+    private final static Logger log = LoggerFactory
             .getLogger(MonitoringUtil.class);
 
     private static final boolean VERBOSE = true; // debug
@@ -116,8 +116,8 @@ public final class MonitoringUtil {
         final long monitoringPeriod = monitoringPeriodStr == null ? MonitoringTask.DEFAULT_PERIOD
                 : Long.parseLong(monitoringPeriodStr);
         if (VERBOSE) {
-            System.out.println("Create MonitoringFileTask(" + monitoringPeriod
-                    + "ms) to monitor " + monitoringFilePath); // NOSONAR
+            System.out.println("Create MonitoringFileTask(" + monitoringPeriod // NOSONAR
+                    + "ms) to monitor " + monitoringFilePath);
         }
 
         return new MonitoringTask(monitoringTarget, monitoringPeriod, callback);
@@ -190,15 +190,17 @@ public final class MonitoringUtil {
                 newFile = File.createTempFile("zk_mon_", ".tmp");
                 updateFile(newFile);
                 if (diff(file, newFile)) {
-                    file.delete();
+                    if (!file.delete()) {
+                        log.warn("Failed to delete " + file.getAbsolutePath());
+                    }
                     file = newFile;
                 } else {
                     newFile.delete();
                 }
             } catch (final IOException e) {
                 log.warn("Failed to create " + newFile, e);
-                if (newFile != null) {
-                    newFile.delete();
+                if (newFile != null && !newFile.delete()) {
+                    log.warn("Failed to delete " + newFile.getAbsolutePath());
                 }
             }
             return file.lastModified();

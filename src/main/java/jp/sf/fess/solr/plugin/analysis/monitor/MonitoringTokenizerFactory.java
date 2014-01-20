@@ -137,10 +137,10 @@ public class MonitoringTokenizerFactory extends TokenizerFactory implements
             final Reader inputPending = getInputPending();
             if (factoryTimestamp > tokenizerTimestamp) {
                 if (VERBOSE) {
-                    System.out
-                            .println("Update Tokenizer/" + baseClass + " ("
-                                    + tokenizerTimestamp + ","
-                                    + factoryTimestamp + ")"); // NOSONAR
+                    System.out.println("Update Tokenizer/" // NOSONAR
+                            + baseClass + " (" + tokenizerTimestamp
+                            + ","
+                            + factoryTimestamp + ")");
                 }
                 tokenizer = createTokenizer(inputPending);
             } else if (inputPending != ILLEGAL_STATE_READER) {
@@ -195,7 +195,8 @@ public class MonitoringTokenizerFactory extends TokenizerFactory implements
                 final Object attributeImplsObj = attributeImplsField
                         .get(newTokenizer);
                 attributeImplsField.set(this, attributeImplsObj);
-                final Object currentStateObj = currentStateField.get(newTokenizer);
+                final Object currentStateObj = currentStateField
+                        .get(newTokenizer);
                 currentStateField.set(this, currentStateObj);
             } catch (final Exception e) {
                 throw new IllegalStateException(

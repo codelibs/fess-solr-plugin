@@ -110,9 +110,10 @@ public class MonitoringTokenFilterFactory extends TokenFilterFactory implements
         public void reset() throws IOException {
             if (factoryTimestamp > tokenStreamTimestamp) {
                 if (VERBOSE) {
-                    System.out.println("Update TokenStream/" + baseClass + " ("
-                            + tokenStreamTimestamp + "," + factoryTimestamp
-                            + ")"); // NOSONAR
+                    System.out.println("Update TokenStream/" // NOSONAR
+                            + baseClass + " (" + tokenStreamTimestamp
+                            + ","
+                            + factoryTimestamp + ")");
                 }
                 tokenStream = createTokenStream(input);
             }
@@ -152,7 +153,8 @@ public class MonitoringTokenFilterFactory extends TokenFilterFactory implements
                     .create(input);
 
             try {
-                final Object attributesObj = attributesField.get(newTokenStream);
+                final Object attributesObj = attributesField
+                        .get(newTokenStream);
                 attributesField.set(this, attributesObj);
                 final Object attributeImplsObj = attributeImplsField
                         .get(newTokenStream);
