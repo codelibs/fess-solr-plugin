@@ -36,6 +36,9 @@ public class SolrConfigUtil {
 
     private static final String USER_DICT_ENCODING = "userDictionaryEncoding";
 
+    private SolrConfigUtil() {
+    }
+
     public static SuggestUpdateConfig getUpdateHandlerConfig(
             final SolrConfig config) {
         final SuggestUpdateConfig suggestUpdateConfig = new SuggestUpdateConfig();
@@ -84,6 +87,7 @@ public class SolrConfigUtil {
                     .parseLong(updateInterval));
         }
 
+        //set suggestFieldInfo
         final NodeList nodeList = config.getNodeList(
                 "updateHandler/suggest/suggestFieldInfo", true);
         for (int i = 0; i < nodeList.getLength(); i++) {
@@ -112,6 +116,7 @@ public class SolrConfigUtil {
                             .getNodeName();
 
                     if ("tokenizerFactory".equals(fieldInfoChildNodeName)) {
+                        //field tokenier settings
                         final SuggestUpdateConfig.TokenizerConfig tokenizerConfig = new SuggestUpdateConfig.TokenizerConfig();
 
                         final NamedNodeMap tokenizerFactoryAttributes = fieldInfoChildNode
@@ -148,6 +153,7 @@ public class SolrConfigUtil {
                         fieldConfig.setTokenizerConfig(tokenizerConfig);
                     } else if ("suggestReadingConverter"
                             .equals(fieldInfoChildNodeName)) {
+                        //field reading converter settings
                         final NodeList converterNodeList = fieldInfoChildNode
                                 .getChildNodes();
                         for (int k = 0; k < converterNodeList.getLength(); k++) {
@@ -190,6 +196,7 @@ public class SolrConfigUtil {
                         }
                     } else if ("suggestNormalizer"
                             .equals(fieldInfoChildNodeName)) {
+                        //field normalizer settings
                         final NodeList normalizerNodeList = fieldInfoChildNode
                                 .getChildNodes();
                         for (int k = 0; k < normalizerNodeList.getLength(); k++) {
@@ -244,7 +251,7 @@ public class SolrConfigUtil {
     }
 
     public static List<SuggestFieldInfo> getSuggestFieldInfoList(
-            final SuggestUpdateConfig config) throws Exception {
+            final SuggestUpdateConfig config) {
         final List<SuggestFieldInfo> list = new ArrayList<SuggestFieldInfo>();
 
         for (final SuggestUpdateConfig.FieldConfig fieldConfig : config

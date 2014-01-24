@@ -18,11 +18,14 @@ public class TransactionLogUtil {
 
     private static final String PREFIX = "suggest-";
 
+    private TransactionLogUtil() {
+    }
+
     public static TransactionLog createSuggestTransactionLog(
             final File tlogFile, final Collection<String> globalStrings,
             final boolean openExisting) throws NoSuchMethodException,
             InstantiationException, IllegalAccessException, IOException,
-            IllegalArgumentException, InvocationTargetException {
+            InvocationTargetException {
         final long start = System.currentTimeMillis();
         final File file = new File(tlogFile.getParent(), PREFIX
                 + tlogFile.getName());
@@ -47,8 +50,9 @@ public class TransactionLogUtil {
         }
         for (final File f : d.listFiles()) {
             if (f.isFile() && f.getName().startsWith(PREFIX)) {
-                if (!f.delete()) {
-                    f.deleteOnExit();
+                boolean deleted = f.delete();
+                if(!deleted) {
+                    logger.warn("Failed to delete " + f.getAbsolutePath());
                 }
             }
         }

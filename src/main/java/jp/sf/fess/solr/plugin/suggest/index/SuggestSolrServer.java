@@ -95,8 +95,7 @@ public class SuggestSolrServer {
                 SuggestConstants.SuggestFieldNames.FIELD_NAME });
         final QueryResponse queryResponse = server.query(solrQuery,
                 SolrRequest.METHOD.POST);
-        final SolrDocumentList responseList = queryResponse.getResults();
-        return responseList;
+        return queryResponse.getResults();
     }
 
     public SolrDocumentList get(final String ids) throws IOException,
@@ -106,7 +105,6 @@ public class SuggestSolrServer {
         solrQuery.set("ids", ids);
         final QueryResponse response = server.query(solrQuery,
                 SolrRequest.METHOD.POST);
-        final SolrDocumentList responseList = response.getResults();
-        return responseList;
+        return response.getResults();
     }
 }

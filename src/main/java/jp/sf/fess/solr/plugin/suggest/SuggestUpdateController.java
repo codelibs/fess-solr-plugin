@@ -25,7 +25,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class SuggestUpdateController {
-    private static Logger logger = LoggerFactory
+    private static final Logger logger = LoggerFactory
             .getLogger(SuggestUpdateController.class);
 
     protected final UpdateTask updateTask;
@@ -55,11 +55,10 @@ public class SuggestUpdateController {
         final SuggestSolrServer suggestSolrServer = new SuggestSolrServer(
                 config.getSolrUrl(), config.getSolrUser(),
                 config.getSolrPassword());
-        final IndexUpdater indexUpdater = new IndexUpdater(suggestSolrServer);
+        this.indexUpdater = new IndexUpdater(suggestSolrServer);
         indexUpdater.setUpdateInterval(config.getUpdateInterval());
         suggestFieldInfoList = fieldInfoList;
 
-        this.indexUpdater = indexUpdater;
         this.config = config;
 
         updateTask = new UpdateTask();
@@ -165,6 +164,7 @@ public class SuggestUpdateController {
             while (isRunning.get()) {
                 final Request request = requestQueue.poll();
                 if (request == null) {
+                    //waiting next request.
                     try {
                         synchronized (this) {
                             this.wait(config.getUpdateInterval());
@@ -189,6 +189,8 @@ public class SuggestUpdateController {
                         final SuggestNormalizer normalizer = fieldInfo
                                 .getSuggestNormalizer();
                         final SolrInputDocument doc = (SolrInputDocument) request.obj;
+
+                        //create documentReader
                         final DocumentReader reader = new DocumentReader(
                                 tokenizerFactory, converter, normalizer, doc,
                                 fieldNameList, labelFieldNameList, roleFieldNameList,
@@ -197,15 +199,15 @@ public class SuggestUpdateController {
                         SuggestItem item;
                         try {
                             while ((item = reader.next()) != null) {
-                                count++;
                                 indexUpdater.addSuggestItem(item);
+                                count++;
                             }
                         } catch (final Exception e) {
                             logger.warn("Failed to tokenize document.", e);
                         }
                     }
                     if (logger.isDebugEnabled()) {
-                        logger.info("updateTask finish add. took:"
+                        logger.debug("updateTask finish add. took:"
                                 + (System.currentTimeMillis() - start)
                                 + "  count: " + count);
                     }
@@ -244,12 +246,12 @@ public class SuggestUpdateController {
     }
 
     protected static class TransactionLogParseTask extends Thread {
-        protected static Logger logger = LoggerFactory
+        protected static final Logger logger = LoggerFactory
                 .getLogger(TransactionLogParseTask.class);
 
         protected AtomicBoolean isRunning = new AtomicBoolean(false);
 
-        protected Queue<TransactionLog> transactionLogQueue = new ConcurrentLinkedQueue<TransactionLog>(); // TODO ConcurrentLinkedDeque<TransactionLog>();
+        protected Queue<TransactionLog> transactionLogQueue = new ConcurrentLinkedQueue<TransactionLog>();
 
         protected final TransactionLogParseListener listener;
 

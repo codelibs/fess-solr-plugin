@@ -2,7 +2,6 @@ package jp.sf.fess.solr.plugin.suggest.index;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -21,7 +20,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class IndexUpdater extends Thread {
-    private final Logger logger = LoggerFactory.getLogger(IndexUpdater.class);
+    private static final Logger logger = LoggerFactory.getLogger(IndexUpdater.class);
 
     protected Queue<Request> suggestRequestQueue = new ConcurrentLinkedQueue<Request>();
 
@@ -79,16 +78,18 @@ public class IndexUpdater extends Thread {
         running.set(true);
         boolean doCommit = false;
         while (running.get()) {
-            final int maxUpdateNum = this.maxUpdateNum.get();
-            final Request[] requestArray = new Request[maxUpdateNum];
+            final int max = this.maxUpdateNum.get();
+            final Request[] requestArray = new Request[max];
             int requestNum = 0;
-            for (int i = 0; i < maxUpdateNum; i++) {
+            for (int i = 0; i < max; i++) {
                 final Request request = suggestRequestQueue.peek();
                 if (request == null) {
                     break;
                 }
                 if (request.type == RequestType.ADD) {
                     suggestRequestQueue.poll();
+
+                    //merge duplicate items
                     boolean exist = false;
                     final SuggestItem item2 = (SuggestItem) request.obj;
                     for (int j = 0; j < requestNum; j++) {
@@ -114,11 +115,13 @@ public class IndexUpdater extends Thread {
 
             if (requestNum == 0) {
                 try {
+                    //commit if needed
                     if (doCommit) {
                         suggestSolrServer.commit();
                         doCommit = false;
                     }
                     try {
+                        //wait next item...
                         synchronized (this) {
                             this.wait(updateInterval.get());
                         }
@@ -126,6 +129,7 @@ public class IndexUpdater extends Thread {
                         break;
                     }
                 } catch (final Exception e) {
+                    //ignore
                 }
                 continue;
             }
@@ -140,7 +144,8 @@ public class IndexUpdater extends Thread {
 
                     final SuggestItem[] suggestItemArray = new SuggestItem[requestNum];
                     int itemSize = 0;
-                    final StringBuilder ids = new StringBuilder(10000);
+
+                    final StringBuilder ids = new StringBuilder(100000);
                     for (int i = 0; i < requestNum; i++) {
                         final Request request = requestArray[i];
                         final SuggestItem item = (SuggestItem) request.obj;
@@ -151,6 +156,7 @@ public class IndexUpdater extends Thread {
                         ids.append(item.getDocumentId());
                         itemSize++;
                     }
+
                     mergeSolrIndex(suggestItemArray, itemSize, ids.toString());
 
                     final List<SolrInputDocument> solrInputDocumentList = new ArrayList<SolrInputDocument>(

@@ -177,9 +177,9 @@ public class DocumentReader {
             return null;
         }
         final Reader rd = new StringReader(nextFieldString);
-        final Tokenizer tokenizer = tokenizerFactory.create(rd);
-        tokenizer.reset();
-        return tokenizer;
+        final Tokenizer t = tokenizerFactory.create(rd);
+        t.reset();
+        return t;
     }
 
     private String getNextFieldString() {

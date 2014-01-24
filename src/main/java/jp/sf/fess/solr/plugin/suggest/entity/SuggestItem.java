@@ -130,6 +130,11 @@ public class SuggestItem {
         return false;
     }
 
+    @Override
+    public int hashCode() {
+        return getDocumentId().hashCode();
+    }
+
     public SolrInputDocument toSolrInputDocument() {
         final SolrInputDocument doc = new SolrInputDocument();
 
