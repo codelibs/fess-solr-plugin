@@ -52,7 +52,7 @@ public class SuggestUpdateController {
 
     protected int limitDocumentQueuingNum = 50;
 
-    protected int limitTermQueuingNum = 100000;
+    protected int limitTermQueuingNum = 50000;
 
     protected final Queue<Request> requestQueue = new ConcurrentLinkedQueue<Request>();
 
@@ -215,10 +215,18 @@ public class SuggestUpdateController {
                         SuggestItem item;
                         try {
                             while ((item = reader.next()) != null) {
+                                while(((count % 10000) == 0) &&
+                                        (indexUpdater.getQueuingItemNum() > limitTermQueuingNum) &&
+                                        isRunning()) {
+                                    Thread.sleep(1000);
+                                }
                                 indexUpdater.addSuggestItem(item);
                                 count++;
                             }
-                        } catch (final Exception e) {
+                        } catch(InterruptedException e) {
+                            logger.warn("updateTask is interrupted");
+                            break;
+                        }catch (final Exception e) {
                             logger.warn("Failed to tokenize document.", e);
                         }
                     }
