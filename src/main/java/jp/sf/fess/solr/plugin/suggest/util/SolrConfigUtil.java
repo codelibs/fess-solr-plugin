@@ -44,7 +44,7 @@ import org.w3c.dom.NodeList;
 /**
  * Created by yfujita on 2014/01/12.
  */
-public class SolrConfigUtil {
+public final class SolrConfigUtil {
     private static final Logger logger = LoggerFactory
             .getLogger(SolrConfigUtil.class);
 

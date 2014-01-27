@@ -28,7 +28,7 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.io.Files;
 
-public class TransactionLogUtil {
+public final class TransactionLogUtil {
     private static final Logger logger = LoggerFactory
             .getLogger(TransactionLogUtil.class);
 

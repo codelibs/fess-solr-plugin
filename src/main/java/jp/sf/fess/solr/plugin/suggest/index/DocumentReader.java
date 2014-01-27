@@ -144,7 +144,7 @@ public class DocumentReader {
                 continue;
             }
             final Collection<Object> valList = field.getValues();
-            if (valList == null || valList.size() == 0) {
+            if (valList == null || valList.isEmpty()) {
                 continue;
             }
 
@@ -161,7 +161,7 @@ public class DocumentReader {
                 continue;
             }
             final Collection<Object> valList = field.getValues();
-            if (valList == null || valList.size() == 0) {
+            if (valList == null || valList.isEmpty()) {
                 continue;
             }
 
@@ -208,7 +208,7 @@ public class DocumentReader {
                 continue;
             }
             final Collection<Object> valList = field.getValues();
-            if (valList == null || valList.size() == 0) {
+            if (valList == null || valList.isEmpty()) {
                 continue;
             }
 
