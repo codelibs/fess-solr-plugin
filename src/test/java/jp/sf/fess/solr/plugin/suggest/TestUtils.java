@@ -30,6 +30,7 @@ import jp.sf.fess.suggest.util.SuggestUtil;
 
 import org.apache.lucene.analysis.util.TokenizerFactory;
 import org.apache.solr.client.solrj.embedded.JettySolrRunner;
+import org.apache.solr.client.solrj.impl.HttpSolrServer;
 
 public class TestUtils {
     public static final String SOLR_URL = "http://localhost:8181/solr/core1-suggest";
@@ -59,9 +60,7 @@ public class TestUtils {
     public static SuggestUpdateConfig getSuggestUpdateConfig() {
         final SuggestUpdateConfig config = new SuggestUpdateConfig();
         config.setUpdateInterval(1 * 1000);
-        config.setSolrUrl(SOLR_URL);
-        config.setSolrUser("solradmin");
-        config.setSolrPassword("solradmin");
+        config.setSolrServer(new HttpSolrServer(SOLR_URL));
         final SuggestUpdateConfig.FieldConfig fieldConfig = new SuggestUpdateConfig.FieldConfig();
         fieldConfig
                 .setTokenizerConfig(new SuggestUpdateConfig.TokenizerConfig());
@@ -69,8 +68,8 @@ public class TestUtils {
         return config;
     }
 
-    public static SuggestSolrServer createSuggestSolrServer() {
-        return new SuggestSolrServer(SOLR_URL, "solradmin", "solradmin");
+    protected static SuggestSolrServer createSuggestSolrServer() {
+        return new SuggestSolrServer(new HttpSolrServer(SOLR_URL));
     }
 
     public static void startJerrySolrRunner() {

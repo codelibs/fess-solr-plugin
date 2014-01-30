@@ -17,23 +17,18 @@
 package jp.sf.fess.solr.plugin.suggest.index;
 
 import java.io.IOException;
-import java.net.URL;
 import java.util.List;
 
 import jp.sf.fess.suggest.SuggestConstants;
 
-import org.apache.commons.lang.StringUtils;
-import org.apache.http.auth.AuthScope;
-import org.apache.http.auth.Credentials;
-import org.apache.http.auth.UsernamePasswordCredentials;
 import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.SolrRequest;
+import org.apache.solr.client.solrj.SolrServer;
 import org.apache.solr.client.solrj.SolrServerException;
+import org.apache.solr.client.solrj.impl.HttpSolrServer;
 import org.apache.solr.client.solrj.response.QueryResponse;
 import org.apache.solr.common.SolrDocumentList;
 import org.apache.solr.common.SolrInputDocument;
-import org.codelibs.solr.lib.server.SolrLibHttpSolrServer;
-import org.codelibs.solr.lib.server.interceptor.PreemptiveAuthInterceptor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,39 +36,21 @@ public class SuggestSolrServer {
     private static final Logger logger = LoggerFactory
             .getLogger(SuggestSolrServer.class);
 
-    private SolrLibHttpSolrServer server;
+    private SolrServer server;
 
-    public SuggestSolrServer(final String url) {
+    protected SuggestSolrServer(final String url) {
         try {
-            server = new SolrLibHttpSolrServer(url);
+            final HttpSolrServer server = new HttpSolrServer(url);
             server.setConnectionTimeout(10 * 1000);
             server.setMaxRetries(3);
+            this.server = server;
         } catch (final Exception e) {
             logger.warn("Failed to create SuggestSolrServer object.", e);
         }
     }
 
-    public SuggestSolrServer(final String url, final String user,
-            final String password) {
-        try {
-            server = new SolrLibHttpSolrServer(url);
-            server.setConnectionTimeout(10 * 1000);
-            server.setMaxRetries(3);
-
-            if (StringUtils.isNotBlank(user)) {
-                final URL u = new URL(url);
-                final AuthScope authScope = new AuthScope(u.getHost(),
-                        u.getPort());
-                final Credentials credentials = new UsernamePasswordCredentials(
-                        user, password);
-                server.setCredentials(authScope, credentials);
-                server.addRequestInterceptor(new PreemptiveAuthInterceptor());
-            }
-        } catch (final Exception e) {
-            logger.warn("Failed to create SuggestSolrServer object.", e);
-        }
-
-        //TODO その他設定
+    public SuggestSolrServer(final SolrServer server) {
+        this.server = server;
     }
 
     public void add(final SolrInputDocument doc) throws IOException,

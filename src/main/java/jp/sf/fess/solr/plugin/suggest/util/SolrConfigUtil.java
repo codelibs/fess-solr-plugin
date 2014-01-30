@@ -17,6 +17,8 @@
 package jp.sf.fess.solr.plugin.suggest.util;
 
 import java.lang.reflect.Constructor;
+import java.lang.reflect.Method;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -28,13 +30,20 @@ import jp.sf.fess.solr.plugin.suggest.entity.SuggestFieldInfo;
 import jp.sf.fess.suggest.SuggestConstants;
 import jp.sf.fess.suggest.converter.SuggestIntegrateConverter;
 import jp.sf.fess.suggest.converter.SuggestReadingConverter;
+import jp.sf.fess.suggest.exception.FessSuggestException;
 import jp.sf.fess.suggest.normalizer.SuggestIntegrateNormalizer;
 import jp.sf.fess.suggest.normalizer.SuggestNormalizer;
 import jp.sf.fess.suggest.util.SuggestUtil;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.http.auth.AuthScope;
+import org.apache.http.auth.Credentials;
+import org.apache.http.auth.UsernamePasswordCredentials;
 import org.apache.lucene.analysis.util.TokenizerFactory;
+import org.apache.solr.client.solrj.SolrServer;
 import org.apache.solr.core.SolrConfig;
+import org.codelibs.solr.lib.server.SolrLibHttpSolrServer;
+import org.codelibs.solr.lib.server.interceptor.PreemptiveAuthInterceptor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.NamedNodeMap;
@@ -59,39 +68,95 @@ public final class SolrConfigUtil {
             final SolrConfig config) {
         final SuggestUpdateConfig suggestUpdateConfig = new SuggestUpdateConfig();
 
-        //setting config
-        final String solrUrl = config.getVal("updateHandler/suggest/solrUrl", false);
-        if (StringUtils.isNotBlank(solrUrl)) {
-            suggestUpdateConfig.setSolrUrl(solrUrl);
+        final Node solrServerNode = config.getNode(
+                "updateHandler/suggest/solrServer", false);
+        if (solrServerNode != null) {
+            try {
+                final Node classNode = solrServerNode.getAttributes()
+                        .getNamedItem("class");
+                String className;
+                if (classNode != null) {
+                    className = classNode.getTextContent();
+                } else {
+                    className = "org.codelibs.solr.lib.server.SolrLibHttpSolrServer";
+                }
+                @SuppressWarnings("unchecked")
+                final Class<? extends SolrServer> clazz = (Class<? extends SolrServer>) Class
+                        .forName(className);
+                final String arg = config.getVal(
+                        "updateHandler/suggest/solrServer/arg", false);
+                SolrServer solrServer;
+                if (StringUtils.isNotBlank(arg)) {
+                    final Constructor<? extends SolrServer> constructor = clazz
+                            .getConstructor(String.class);
+                    solrServer = constructor.newInstance(arg);
+                } else {
+                    solrServer = clazz.newInstance();
+                }
+
+                final String username = config
+                        .getVal("updateHandler/suggest/solrServer/credentials/username",
+                                false);
+                final String password = config
+                        .getVal("updateHandler/suggest/solrServer/credentials/password",
+                                false);
+                if (StringUtils.isNotBlank(username)
+                        && StringUtils.isNotBlank(password)
+                        && solrServer instanceof SolrLibHttpSolrServer) {
+                    final SolrLibHttpSolrServer solrLibHttpSolrServer = (SolrLibHttpSolrServer) solrServer;
+                    final URL u = new URL(arg);
+                    final AuthScope authScope = new AuthScope(u.getHost(),
+                            u.getPort());
+                    final Credentials credentials = new UsernamePasswordCredentials(
+                            username, password);
+                    solrLibHttpSolrServer
+                            .setCredentials(authScope, credentials);
+                    solrLibHttpSolrServer
+                            .addRequestInterceptor(new PreemptiveAuthInterceptor());
+                }
+
+                final NodeList childNodes = solrServerNode.getChildNodes();
+                for (int i = 0; i < childNodes.getLength(); i++) {
+                    final Node node = childNodes.item(i);
+                    if (node.getNodeType() == Node.ELEMENT_NODE) {
+                        final String name = node.getNodeName();
+                        if (!"arg".equals(name) && !"credentials".equals(name)) {
+                            final String value = node.getTextContent();
+                            final Node typeNode = node.getAttributes()
+                                    .getNamedItem("type");
+                            final Method method = clazz.getMethod(
+                                    "set" + name.substring(0, 1).toUpperCase()
+                                            + name.substring(1),
+                                    getMethodArgClass(typeNode));
+                            method.invoke(solrServer,
+                                    getMethodArgValue(typeNode, value));
+                        }
+                    }
+                }
+                suggestUpdateConfig.setSolrServer(solrServer);
+            } catch (final Exception e) {
+                throw new FessSuggestException("Failed to load SolrServer.", e);
+            }
         }
 
-        final String solrUser = config.getVal("updateHandler/suggest/solrUser", false);
-        if (StringUtils.isNotBlank(solrUser)) {
-            suggestUpdateConfig.setSolrUser(solrUser);
-        }
-        final String solrPassword = config.getVal("updateHandler/suggest/solrPassword",
-                false);
-        if (StringUtils.isNotBlank(solrPassword)) {
-            suggestUpdateConfig.setSolrPassword(solrPassword);
-        }
-        final String labelFields = config.getVal("updateHandler/suggest/labelFields",
-                false);
+        final String labelFields = config.getVal(
+                "updateHandler/suggest/labelFields", false);
         if (StringUtils.isNotBlank(labelFields)) {
             suggestUpdateConfig.setLabelFields(labelFields.trim().split(","));
         }
-        final String roleFields = config.getVal("updateHandler/suggest/roleFields",
-                false);
+        final String roleFields = config.getVal(
+                "updateHandler/suggest/roleFields", false);
         if (StringUtils.isNotBlank(roleFields)) {
             suggestUpdateConfig.setRoleFields(roleFields.trim().split(","));
         }
 
-        final String expiresField = config.getVal("updateHandler/suggest/expiresField",
-                false);
+        final String expiresField = config.getVal(
+                "updateHandler/suggest/expiresField", false);
         if (StringUtils.isNotBlank(expiresField)) {
             suggestUpdateConfig.setExpiresField(expiresField);
         }
-        final String segmentField = config.getVal("updateHandler/suggest/segmentField",
-                false);
+        final String segmentField = config.getVal(
+                "updateHandler/suggest/segmentField", false);
         if (StringUtils.isNotBlank(segmentField)) {
             suggestUpdateConfig.setSegmentField(segmentField);
         }
@@ -259,11 +324,41 @@ public final class SolrConfigUtil {
 
                 suggestUpdateConfig.addFieldConfig(fieldConfig);
             } catch (final Exception e) {
-                logger.warn("debug error", e);
+                throw new FessSuggestException(
+                        "Failed to load Suggest Field Info.", e);
             }
         }
 
         return suggestUpdateConfig;
+    }
+
+    private static Object getMethodArgValue(final Node typeNode,
+            final String value) {
+        if (typeNode != null) {
+            final String type = typeNode.getTextContent();
+            if ("Long".equals(type) || "long".equals(type)) {
+                return Long.parseLong(value);
+            } else if ("Integer".equals(type) || "int".equals(type)) {
+                return Integer.parseInt(value);
+            }
+        }
+        return value;
+    }
+
+    private static Class<?> getMethodArgClass(final Node typeNode) {
+        if (typeNode != null) {
+            final String type = typeNode.getTextContent();
+            if ("Long".equals(type)) {
+                return Long.class;
+            } else if ("long".equals(type)) {
+                return long.class;
+            } else if ("Integer".equals(type)) {
+                return Integer.class;
+            } else if ("int".equals(type)) {
+                return int.class;
+            }
+        }
+        return String.class;
     }
 
     public static List<SuggestFieldInfo> getSuggestFieldInfoList(
@@ -317,7 +412,7 @@ public final class SolrConfigUtil {
                         suggestIntegrateConverter, suggestIntegrateNormalizer);
                 list.add(suggestFieldInfo);
             } catch (final Exception e) {
-                logger.warn("Failed to create Tokenizer."
+                throw new FessSuggestException("Failed to create Tokenizer."
                         + fieldConfig.getTokenizerConfig().getClassName(), e);
             }
         }

@@ -194,13 +194,13 @@
 		<dependency>
 			<groupId>org.apache.solr</groupId>
 			<artifactId>solr-solrj</artifactId>
-			<version>4.6.0</version>
+			<version>4.6.1</version>
 			<scope>provided</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.solr</groupId>
 			<artifactId>solr-core</artifactId>
-			<version>4.6.0</version>
+			<version>4.6.1</version>
 			<scope>provided</scope>
 		</dependency>
 		<dependency>
@@ -212,7 +212,7 @@
 		<dependency>
 			<groupId>org.apache.solr</groupId>
 			<artifactId>solr-langid</artifactId>
-			<version>4.6.0</version>
+			<version>4.6.1</version>
 			<scope>test</scope>
 		</dependency>
 		<dependency>

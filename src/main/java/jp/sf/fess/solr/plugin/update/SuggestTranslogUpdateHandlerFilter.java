@@ -53,28 +53,25 @@ public class SuggestTranslogUpdateHandlerFilter extends UpdateHandlerFilter {
         //TODO replay?
         TransactionLogUtil.clearSuggestTransactionLog(ulog.getLogDir());
 
-        try {
-            final SuggestUpdateConfig config = SolrConfigUtil
-                    .getUpdateHandlerConfig(core.getSolrConfig());
-            final List<SuggestFieldInfo> suggestFieldInfoList = SolrConfigUtil
-                    .getSuggestFieldInfoList(config);
-            suggestUpdateController = new SuggestUpdateController(config,
-                    suggestFieldInfoList);
-            if (config.getLabelFields() != null) {
-                for (final String label : config.getLabelFields()) {
-                    suggestUpdateController.addLabelFieldName(label);
-                }
+        final SuggestUpdateConfig config = SolrConfigUtil
+                .getUpdateHandlerConfig(core.getSolrConfig());
+        final List<SuggestFieldInfo> suggestFieldInfoList = SolrConfigUtil
+                .getSuggestFieldInfoList(config);
+        suggestUpdateController = new SuggestUpdateController(config,
+                suggestFieldInfoList);
+        if (config.getLabelFields() != null) {
+            for (final String label : config.getLabelFields()) {
+                suggestUpdateController.addLabelFieldName(label);
             }
-            if (config.getRoleFields() != null) {
-                for (final String role : config.getRoleFields()) {
-                    suggestUpdateController.addRoleFieldName(role);
-                }
-            }
-            suggestUpdateController.setLimitDocumentQueuingNum(2);
-            suggestUpdateController.start();
-        } catch (final Exception e) {
-            logger.warn("Failed to startup handler.", e);
         }
+        if (config.getRoleFields() != null) {
+            for (final String role : config.getRoleFields()) {
+                suggestUpdateController.addRoleFieldName(role);
+            }
+        }
+        suggestUpdateController.setLimitDocumentQueuingNum(2);
+        suggestUpdateController.start();
+
     }
 
     @Override

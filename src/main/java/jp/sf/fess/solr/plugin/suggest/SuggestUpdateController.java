@@ -69,9 +69,8 @@ public class SuggestUpdateController {
     public SuggestUpdateController(final SuggestUpdateConfig config,
             final List<SuggestFieldInfo> fieldInfoList) {
         final SuggestSolrServer suggestSolrServer = new SuggestSolrServer(
-                config.getSolrUrl(), config.getSolrUser(),
-                config.getSolrPassword());
-        this.indexUpdater = new IndexUpdater(suggestSolrServer);
+                config.getSolrServer());
+        indexUpdater = new IndexUpdater(suggestSolrServer);
         indexUpdater.setUpdateInterval(config.getUpdateInterval());
         suggestFieldInfoList = fieldInfoList;
 
@@ -209,24 +208,24 @@ public class SuggestUpdateController {
                         //create documentReader
                         final DocumentReader reader = new DocumentReader(
                                 tokenizerFactory, converter, normalizer, doc,
-                                fieldNameList, labelFieldNameList, roleFieldNameList,
-                                config.getExpiresField(),
+                                fieldNameList, labelFieldNameList,
+                                roleFieldNameList, config.getExpiresField(),
                                 config.getSegmentField());
                         SuggestItem item;
                         try {
                             while ((item = reader.next()) != null) {
-                                while(((count % 10000) == 0) &&
-                                        (indexUpdater.getQueuingItemNum() > limitTermQueuingNum) &&
-                                        isRunning()) {
+                                while (count % 10000 == 0
+                                        && indexUpdater.getQueuingItemNum() > limitTermQueuingNum
+                                        && isRunning()) {
                                     Thread.sleep(1000);
                                 }
                                 indexUpdater.addSuggestItem(item);
                                 count++;
                             }
-                        } catch(InterruptedException e) {
+                        } catch (final InterruptedException e) {
                             logger.warn("updateTask is interrupted");
                             break;
-                        }catch (final Exception e) {
+                        } catch (final Exception e) {
                             logger.warn("Failed to tokenize document.", e);
                         }
                     }

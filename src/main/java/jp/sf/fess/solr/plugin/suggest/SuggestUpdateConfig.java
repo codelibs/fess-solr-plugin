@@ -20,12 +20,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.solr.client.solrj.SolrServer;
+
 public class SuggestUpdateConfig {
-    private String solrUrl = "";
-
-    private String solrUser = "";
-
-    private String solrPassword = "";
+    private SolrServer solrServer;
 
     private String[] labelFields = null;
 
@@ -39,12 +37,12 @@ public class SuggestUpdateConfig {
 
     private final List<FieldConfig> fieldConfigList = new ArrayList<FieldConfig>();
 
-    public String getSolrUrl() {
-        return solrUrl;
+    public SolrServer getSolrServer() {
+        return solrServer;
     }
 
-    public void setSolrUrl(final String solrUrl) {
-        this.solrUrl = solrUrl;
+    public void setSolrServer(final SolrServer solrServer) {
+        this.solrServer = solrServer;
     }
 
     public long getUpdateInterval() {
@@ -69,22 +67,6 @@ public class SuggestUpdateConfig {
 
     public void setSegmentField(final String segmentField) {
         this.segmentField = segmentField;
-    }
-
-    public String getSolrUser() {
-        return solrUser;
-    }
-
-    public void setSolrUser(final String solrUser) {
-        this.solrUser = solrUser;
-    }
-
-    public String getSolrPassword() {
-        return solrPassword;
-    }
-
-    public void setSolrPassword(final String solrPassword) {
-        this.solrPassword = solrPassword;
     }
 
     public String[] getLabelFields() {
@@ -218,4 +200,5 @@ public class SuggestUpdateConfig {
             this.properties = properties;
         }
     }
+
 }
