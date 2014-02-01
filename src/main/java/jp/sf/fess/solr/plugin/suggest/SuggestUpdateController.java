@@ -171,12 +171,12 @@ public class SuggestUpdateController {
     }
 
     protected class UpdateTask extends Thread {
-        protected AtomicBoolean isRunning = new AtomicBoolean(false);
+        protected AtomicBoolean running = new AtomicBoolean(false);
 
         @Override
         public void run() {
-            isRunning.set(true);
-            while (isRunning.get()) {
+            running.set(true);
+            while (running.get()) {
                 final Request request = requestQueue.poll();
                 if (request == null) {
                     //waiting next request.
@@ -248,12 +248,12 @@ public class SuggestUpdateController {
         }
 
         private void close() {
-            isRunning.set(false);
+            running.set(false);
             interrupt();
         }
 
         public boolean isRunning() {
-            return isRunning.get();
+            return running.get();
         }
     }
 

@@ -50,6 +50,7 @@ public class IndexUpdater extends Thread {
     protected AtomicInteger maxUpdateNum = new AtomicInteger(10000);
 
     public IndexUpdater(final SuggestSolrServer suggestSolrServer) {
+        super("SuggestIndexUpdater");
         this.suggestSolrServer = suggestSolrServer;
     }
 

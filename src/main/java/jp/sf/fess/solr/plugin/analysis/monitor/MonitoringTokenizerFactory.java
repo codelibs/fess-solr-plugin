@@ -159,7 +159,7 @@ public class MonitoringTokenizerFactory extends TokenizerFactory implements
                             + factoryTimestamp + ")");
                 }
                 tokenizer = createTokenizer(inputPending);
-            } else if (inputPending != ILLEGAL_STATE_READER) {
+            } else if (inputPending != ILLEGAL_STATE_READER) { // NOSONAR
                 tokenizer.setReader(inputPending);
             }
             tokenizer.reset();

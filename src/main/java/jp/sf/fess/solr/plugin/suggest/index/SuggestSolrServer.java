@@ -33,47 +33,50 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class SuggestSolrServer {
+    private static final String MATCH_ALL_QUERY = "*:*";
+
     private static final Logger logger = LoggerFactory
             .getLogger(SuggestSolrServer.class);
 
-    private SolrServer server;
+    private SolrServer solrServer;
 
-    protected SuggestSolrServer(final String url) {
+    // For Testing
+    protected SuggestSolrServer(final String url) { // NOSONAR
         try {
             final HttpSolrServer server = new HttpSolrServer(url);
             server.setConnectionTimeout(10 * 1000);
             server.setMaxRetries(3);
-            this.server = server;
+            solrServer = server;
         } catch (final Exception e) {
             logger.warn("Failed to create SuggestSolrServer object.", e);
         }
     }
 
     public SuggestSolrServer(final SolrServer server) {
-        this.server = server;
+        solrServer = server;
     }
 
     public void add(final SolrInputDocument doc) throws IOException,
             SolrServerException {
-        server.add(doc);
+        solrServer.add(doc);
     }
 
     public void add(final List<SolrInputDocument> documents)
             throws IOException, SolrServerException {
-        server.add(documents);
+        solrServer.add(documents);
     }
 
     public void commit() throws IOException, SolrServerException {
-        server.commit();
+        solrServer.commit();
     }
 
     public void deleteAll() throws IOException, SolrServerException {
-        server.deleteByQuery("*:*");
+        solrServer.deleteByQuery(MATCH_ALL_QUERY);
     }
 
     public void deleteByQuery(final String query) throws IOException,
             SolrServerException {
-        server.deleteByQuery(query);
+        solrServer.deleteByQuery(query);
     }
 
     public SolrDocumentList select(final String query) throws IOException,
@@ -86,7 +89,7 @@ public class SuggestSolrServer {
                 SuggestConstants.SuggestFieldNames.LABELS,
                 SuggestConstants.SuggestFieldNames.ROLES,
                 SuggestConstants.SuggestFieldNames.FIELD_NAME });
-        final QueryResponse queryResponse = server.query(solrQuery,
+        final QueryResponse queryResponse = solrServer.query(solrQuery,
                 SolrRequest.METHOD.POST);
         return queryResponse.getResults();
     }
@@ -96,7 +99,7 @@ public class SuggestSolrServer {
         final SolrQuery solrQuery = new SolrQuery();
         solrQuery.setRequestHandler("/get");
         solrQuery.set("ids", ids);
-        final QueryResponse response = server.query(solrQuery,
+        final QueryResponse response = solrServer.query(solrQuery,
                 SolrRequest.METHOD.POST);
         return response.getResults();
     }

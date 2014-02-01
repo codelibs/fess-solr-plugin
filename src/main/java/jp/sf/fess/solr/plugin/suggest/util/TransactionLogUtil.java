@@ -66,8 +66,8 @@ public final class TransactionLogUtil {
         }
         for (final File f : d.listFiles()) {
             if (f.isFile() && f.getName().startsWith(PREFIX)) {
-                boolean deleted = f.delete();
-                if(!deleted) {
+                final boolean deleted = f.delete();
+                if (!deleted) {
                     logger.warn("Failed to delete " + f.getAbsolutePath());
                 }
             }

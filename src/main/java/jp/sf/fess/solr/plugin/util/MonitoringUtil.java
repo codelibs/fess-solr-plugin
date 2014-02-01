@@ -43,7 +43,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public final class MonitoringUtil {
-    private final static Logger logger = LoggerFactory
+    private static final Logger logger = LoggerFactory
             .getLogger(MonitoringUtil.class);
 
     private static final boolean VERBOSE = false; // debug
@@ -140,7 +140,7 @@ public final class MonitoringUtil {
     }
 
     static boolean diff(final File file1, final File file2) {
-        if (file1 == file2) {
+        if (file1 == file2) { // NOSONAR
             return false;
         } else if (file1 == null || file2 == null) {
             return true;
@@ -211,8 +211,8 @@ public final class MonitoringUtil {
                                 + file.getAbsolutePath());
                     }
                     file = newFile;
-                } else {
-                    newFile.delete();
+                } else if (!newFile.delete()) {
+                    logger.warn("Failed to delete " + newFile.getAbsolutePath());
                 }
             } catch (final IOException e) {
                 logger.warn("Failed to create " + newFile, e);

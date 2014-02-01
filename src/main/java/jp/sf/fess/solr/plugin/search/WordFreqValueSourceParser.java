@@ -18,6 +18,7 @@ package jp.sf.fess.solr.plugin.search;
 
 import java.io.IOException;
 import java.util.HashSet;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
@@ -51,6 +52,7 @@ public class WordFreqValueSourceParser extends ValueSourceParser {
 
         public WordFreqValueSource(final String field, final String word,
                 final boolean normalized) {
+            super();
             this.field = field;
             this.word = normalized ? normalize(word) : word;
             this.normalized = normalized;
@@ -61,7 +63,7 @@ public class WordFreqValueSourceParser extends ValueSourceParser {
         }
 
         protected String normalize(final String value) {
-            return value.toLowerCase();
+            return value.toLowerCase(Locale.getDefault());
         }
 
         @Override

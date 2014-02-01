@@ -35,7 +35,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class SuggestTranslogUpdateHandlerFilter extends UpdateHandlerFilter {
-    private final static Logger logger = LoggerFactory
+    private static final Logger logger = LoggerFactory
             .getLogger(SuggestTranslogUpdateHandlerFilter.class);
 
     private SuggestUpdateController suggestUpdateController;
