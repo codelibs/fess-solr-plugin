@@ -84,7 +84,7 @@ public class DocValuesComponent extends SearchComponent {
 
     @Override
     public String getSource() {
-        return "TBD";
+        return "https://raw2.github.com/codelibs/fess-solr-plugin/master/src/main/java/jp/sf/fess/solr/plugin/search/WordFreqValueSourceParser.java";
     }
 
 }

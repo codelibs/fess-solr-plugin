@@ -317,7 +317,7 @@ public class SuggestUpdateController {
                 }
 
                 if (logger.isInfoEnabled()) {
-                    logger.info("");
+                    logger.info("Getting LogReader");
                 }
                 final TransactionLog.LogReader tlogReader = translog
                         .getReader(0);

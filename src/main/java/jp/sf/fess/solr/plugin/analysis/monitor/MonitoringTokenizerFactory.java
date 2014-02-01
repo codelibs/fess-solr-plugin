@@ -34,7 +34,7 @@ import org.apache.lucene.util.AttributeSource.AttributeFactory;
 public class MonitoringTokenizerFactory extends TokenizerFactory implements
         ResourceLoaderAware {
 
-    private static final boolean VERBOSE = true; // debug
+    private static final boolean VERBOSE = false; // debug
 
     protected static final Reader ILLEGAL_STATE_READER = new Reader() {
         @Override

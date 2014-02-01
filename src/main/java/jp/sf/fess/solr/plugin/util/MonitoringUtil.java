@@ -43,10 +43,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public final class MonitoringUtil {
-    private final static Logger log = LoggerFactory
+    private final static Logger logger = LoggerFactory
             .getLogger(MonitoringUtil.class);
 
-    private static final boolean VERBOSE = true; // debug
+    private static final boolean VERBOSE = false; // debug
 
     private static final String MONITORING_PERIOD = "monitoringPeriod";
 
@@ -163,8 +163,8 @@ public final class MonitoringUtil {
                 }
             }
         } catch (final IOException e) {
-            log.warn("Failed to compare " + file1.getAbsolutePath() + " and "
-                    + file2.getAbsolutePath(), e);
+            logger.warn("Failed to compare " + file1.getAbsolutePath()
+                    + " and " + file2.getAbsolutePath(), e);
             return false;
         } finally {
             if (is1 != null) {
@@ -207,16 +207,17 @@ public final class MonitoringUtil {
                 updateFile(newFile);
                 if (diff(file, newFile)) {
                     if (!file.delete()) {
-                        log.warn("Failed to delete " + file.getAbsolutePath());
+                        logger.warn("Failed to delete "
+                                + file.getAbsolutePath());
                     }
                     file = newFile;
                 } else {
                     newFile.delete();
                 }
             } catch (final IOException e) {
-                log.warn("Failed to create " + newFile, e);
+                logger.warn("Failed to create " + newFile, e);
                 if (newFile != null && !newFile.delete()) {
-                    log.warn("Failed to delete " + newFile.getAbsolutePath());
+                    logger.warn("Failed to delete " + newFile.getAbsolutePath());
                 }
             }
             return file.lastModified();

@@ -31,7 +31,7 @@ import org.apache.lucene.util.AttributeSource;
 
 public class MonitoringTokenFilterFactory extends TokenFilterFactory implements
         ResourceLoaderAware {
-    private static final boolean VERBOSE = true; // debug
+    private static final boolean VERBOSE = false; // debug
 
     protected ResourceLoader loader;
 

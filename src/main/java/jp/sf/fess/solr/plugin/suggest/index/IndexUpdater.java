@@ -36,11 +36,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class IndexUpdater extends Thread {
-    private static final Logger logger = LoggerFactory.getLogger(IndexUpdater.class);
+    private static final Logger logger = LoggerFactory
+            .getLogger(IndexUpdater.class);
 
     protected Queue<Request> suggestRequestQueue = new ConcurrentLinkedQueue<Request>();
 
-    protected SuggestSolrServer suggestSolrServer;
+    protected final SuggestSolrServer suggestSolrServer;
 
     protected AtomicBoolean running = new AtomicBoolean(false);
 
@@ -63,24 +64,24 @@ public class IndexUpdater extends Thread {
     public void addSuggestItem(final SuggestItem item) {
         final Request request = new Request(RequestType.ADD, item);
         suggestRequestQueue.add(request);
-        synchronized (this) {
-            notify();
+        synchronized (suggestSolrServer) {
+            suggestSolrServer.notify();
         }
     }
 
     public void commit() {
         final Request request = new Request(RequestType.COMMIT, null);
         suggestRequestQueue.add(request);
-        synchronized (this) {
-            notify();
+        synchronized (suggestSolrServer) {
+            suggestSolrServer.notify();
         }
     }
 
     public void deleteByQuery(final String query) {
         final Request request = new Request(RequestType.DELETE_BY_QUERY, query);
         suggestRequestQueue.add(request);
-        synchronized (this) {
-            notify();
+        synchronized (suggestSolrServer) {
+            suggestSolrServer.notify();
         }
     }
 
@@ -90,11 +91,13 @@ public class IndexUpdater extends Thread {
 
     @Override
     public void run() {
-        logger.info("Start indexUpdater");
+        if (logger.isInfoEnabled()) {
+            logger.info("Start indexUpdater");
+        }
         running.set(true);
         boolean doCommit = false;
         while (running.get()) {
-            final int max = this.maxUpdateNum.get();
+            final int max = maxUpdateNum.get();
             final Request[] requestArray = new Request[max];
             int requestNum = 0;
             for (int i = 0; i < max; i++) {
@@ -138,8 +141,8 @@ public class IndexUpdater extends Thread {
                     }
                     try {
                         //wait next item...
-                        synchronized (this) {
-                            this.wait(updateInterval.get());
+                        synchronized (suggestSolrServer) {
+                            suggestSolrServer.wait(updateInterval.get());
                         }
                     } catch (final InterruptedException e) {
                         break;
@@ -152,71 +155,71 @@ public class IndexUpdater extends Thread {
             doCommit = true;
 
             switch (requestArray[0].type) {
-                case ADD:
-                    final long start = System.currentTimeMillis();
-                    if (logger.isDebugEnabled()) {
-                        logger.debug("Add " + requestNum + "documents");
-                    }
+            case ADD:
+                final long start = System.currentTimeMillis();
+                if (logger.isDebugEnabled()) {
+                    logger.debug("Add " + requestNum + "documents");
+                }
 
-                    final SuggestItem[] suggestItemArray = new SuggestItem[requestNum];
-                    int itemSize = 0;
+                final SuggestItem[] suggestItemArray = new SuggestItem[requestNum];
+                int itemSize = 0;
 
-                    final StringBuilder ids = new StringBuilder(100000);
-                    for (int i = 0; i < requestNum; i++) {
-                        final Request request = requestArray[i];
-                        final SuggestItem item = (SuggestItem) request.obj;
-                        suggestItemArray[itemSize] = item;
-                        if (ids.length() > 0) {
-                            ids.append(',');
-                        }
-                        ids.append(item.getDocumentId());
-                        itemSize++;
+                final StringBuilder ids = new StringBuilder(100000);
+                for (int i = 0; i < requestNum; i++) {
+                    final Request request = requestArray[i];
+                    final SuggestItem item = (SuggestItem) request.obj;
+                    suggestItemArray[itemSize] = item;
+                    if (ids.length() > 0) {
+                        ids.append(',');
                     }
+                    ids.append(item.getDocumentId());
+                    itemSize++;
+                }
 
-                    mergeSolrIndex(suggestItemArray, itemSize, ids.toString());
+                mergeSolrIndex(suggestItemArray, itemSize, ids.toString());
 
-                    final List<SolrInputDocument> solrInputDocumentList = new ArrayList<SolrInputDocument>(
-                            itemSize);
-                    for (int i = 0; i < itemSize; i++) {
-                        final SuggestItem item = suggestItemArray[i];
-                        solrInputDocumentList.add(item.toSolrInputDocument());
-                    }
-                    try {
-                        suggestSolrServer.add(solrInputDocumentList);
-                        if (logger.isInfoEnabled()) {
-                            logger.info("Done add " + itemSize + " terms. took: "
-                                    + (System.currentTimeMillis() - start));
-                        }
-                    } catch (final Exception e) {
-                        logger.warn("Failed to add document.", e);
-                    }
-                    break;
-                case COMMIT:
-                    if (logger.isDebugEnabled()) {
-                        logger.debug("Commit.");
-                    }
-                    try {
-                        suggestSolrServer.commit();
-                        doCommit = false;
-                    } catch (final Exception e) {
-                        logger.warn("Failed to commit.", e);
-                    }
-                    break;
-                case DELETE_BY_QUERY:
+                final List<SolrInputDocument> solrInputDocumentList = new ArrayList<SolrInputDocument>(
+                        itemSize);
+                for (int i = 0; i < itemSize; i++) {
+                    final SuggestItem item = suggestItemArray[i];
+                    solrInputDocumentList.add(item.toSolrInputDocument());
+                }
+                try {
+                    suggestSolrServer.add(solrInputDocumentList);
                     if (logger.isInfoEnabled()) {
-                        logger.info("DeleteByQuery. query="
-                                + requestArray[0].obj.toString());
+                        logger.info("Done add " + itemSize + " terms. took: "
+                                + (System.currentTimeMillis() - start));
                     }
-                    try {
-                        suggestSolrServer
-                                .deleteByQuery((String) requestArray[0].obj);
-                        suggestSolrServer.commit();
-                    } catch (final Exception e) {
-                        logger.warn("Failed to deleteByQuery.", e);
-                    }
-                    break;
-                default:
-                    break;
+                } catch (final Exception e) {
+                    logger.warn("Failed to add document.", e);
+                }
+                break;
+            case COMMIT:
+                if (logger.isDebugEnabled()) {
+                    logger.debug("Commit.");
+                }
+                try {
+                    suggestSolrServer.commit();
+                    doCommit = false;
+                } catch (final Exception e) {
+                    logger.warn("Failed to commit.", e);
+                }
+                break;
+            case DELETE_BY_QUERY:
+                if (logger.isInfoEnabled()) {
+                    logger.info("DeleteByQuery. query="
+                            + requestArray[0].obj.toString());
+                }
+                try {
+                    suggestSolrServer
+                            .deleteByQuery((String) requestArray[0].obj);
+                    suggestSolrServer.commit();
+                } catch (final Exception e) {
+                    logger.warn("Failed to deleteByQuery.", e);
+                }
+                break;
+            default:
+                break;
             }
         }
 
@@ -227,7 +230,7 @@ public class IndexUpdater extends Thread {
     }
 
     protected void mergeSolrIndex(final SuggestItem[] suggestItemArray,
-                                  final int itemSize, final String ids) {
+            final int itemSize, final String ids) {
         final long startTime = System.currentTimeMillis();
         if (itemSize > 0) {
             SolrDocumentList documentList = null;
@@ -278,8 +281,7 @@ public class IndexUpdater extends Thread {
                                 final List<String> itemRoleList = item
                                         .getRoles();
                                 for (final Object role : roles) {
-                                    if (!itemRoleList.contains(role
-                                            .toString())) {
+                                    if (!itemRoleList.contains(role.toString())) {
                                         itemRoleList.add(role.toString());
                                     }
                                 }
@@ -304,26 +306,24 @@ public class IndexUpdater extends Thread {
         }
     }
 
-    protected void mergeSuggestItem(SuggestItem item1, SuggestItem item2) {
+    protected void mergeSuggestItem(final SuggestItem item1,
+            final SuggestItem item2) {
         item1.setCount(item1.getCount() + 1);
         item1.setExpires(item2.getExpires());
         item1.setSegment(item2.getSegment());
-        final List<String> fieldNameList = item1
-                .getFieldNameList();
+        final List<String> fieldNameList = item1.getFieldNameList();
         for (final String fieldName : item2.getFieldNameList()) {
             if (!fieldNameList.contains(fieldName)) {
                 fieldNameList.add(fieldName);
             }
         }
-        final List<String> labelList = item1
-                .getLabels();
+        final List<String> labelList = item1.getLabels();
         for (final String label : item2.getLabels()) {
             if (!labelList.contains(label)) {
                 labelList.add(label);
             }
         }
-        final List<String> roleList = item1
-                .getRoles();
+        final List<String> roleList = item1.getRoles();
         for (final String role : item2.getRoles()) {
             if (!roleList.contains(role)) {
                 roleList.add(role);

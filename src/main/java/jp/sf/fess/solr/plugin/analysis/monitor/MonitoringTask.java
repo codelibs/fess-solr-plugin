@@ -17,7 +17,7 @@
 package jp.sf.fess.solr.plugin.analysis.monitor;
 
 public class MonitoringTask {
-    private static final boolean VERBOSE = true; // debug
+    private static final boolean VERBOSE = false; // debug
 
     protected Target target;
 
