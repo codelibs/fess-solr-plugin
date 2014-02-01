@@ -86,15 +86,21 @@ public class SuggestTranslogUpdateHandlerFilter extends UpdateHandlerFilter {
         chain.commit(cmd);
 
         final File logFile = new File(logDir, lastLogName);
-        if (logger.isInfoEnabled()) {
-            logger.info("Loading... " + logFile.getAbsolutePath());
-        }
-        try {
-            final TransactionLog transactionLog = TransactionLogUtil
-                    .createSuggestTransactionLog(logFile, null, true);
-            suggestUpdateController.addTransactionLog(transactionLog);
-        } catch (final Exception e) {
-            logger.warn("Failed to add transactionLog", e);
+        if(logFile.exists()) {
+            if (logger.isInfoEnabled()) {
+                logger.info("Loading... " + logFile.getAbsolutePath());
+            }
+            try {
+                final TransactionLog transactionLog = TransactionLogUtil
+                        .createSuggestTransactionLog(logFile, null, true);
+                suggestUpdateController.addTransactionLog(transactionLog);
+            } catch (final Exception e) {
+                logger.warn("Failed to add transactionLog", e);
+            }
+        } else {
+            if(logger.isInfoEnabled()) {
+                logger.info(logFile.getName() + " does not exist.");
+            }
         }
     }
 
