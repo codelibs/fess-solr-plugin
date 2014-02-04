@@ -134,10 +134,23 @@ public class SuggestUpdateController {
         if (logger.isInfoEnabled()) {
             logger.info("closing suggestController");
         }
-        transactionLogParseTask.close();
         updateTask.close();
+        synchronized (updateTask) {
+            updateTask.notify();
+        }
+        transactionLogParseTask.close();
+        synchronized (transactionLogParseTask) {
+            transactionLogParseTask.notify();
+        }
         indexUpdater.close();
         requestQueue.clear();
+        try {
+            transactionLogParseTask.join();
+            updateTask.join();
+            indexUpdater.join();
+        } catch(InterruptedException e) {
+            //ignore
+        }
     }
 
     protected void request(final Request request) {
