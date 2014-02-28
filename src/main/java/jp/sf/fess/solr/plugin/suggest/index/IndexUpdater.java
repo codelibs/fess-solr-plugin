@@ -99,7 +99,6 @@ public class IndexUpdater extends Thread {
             logger.info("Start indexUpdater");
         }
         running.set(true);
-        boolean doCommit = false;
         while (running.get()) {
             final int max = maxUpdateNum.get();
             final Request[] requestArray = new Request[max];
@@ -138,11 +137,6 @@ public class IndexUpdater extends Thread {
 
             if (requestNum == 0) {
                 try {
-                    //commit if needed
-                    if (doCommit) {
-                        suggestSolrServer.commit();
-                        doCommit = false;
-                    }
                     try {
                         //wait next item...
                         synchronized (suggestSolrServer) {
@@ -156,7 +150,6 @@ public class IndexUpdater extends Thread {
                 }
                 continue;
             }
-            doCommit = true;
 
             switch (requestArray[0].type) {
             case ADD:
@@ -204,7 +197,6 @@ public class IndexUpdater extends Thread {
                 }
                 try {
                     suggestSolrServer.commit();
-                    doCommit = false;
                 } catch (final Exception e) {
                     logger.warn("Failed to commit.", e);
                 }
