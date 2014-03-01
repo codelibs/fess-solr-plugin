@@ -103,4 +103,8 @@ public class SuggestSolrServer {
                 SolrRequest.METHOD.POST);
         return response.getResults();
     }
+
+    public void shutdown() {
+        solrServer.shutdown();
+    }
 }

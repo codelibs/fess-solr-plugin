@@ -91,6 +91,7 @@ public class IndexUpdater extends Thread {
         synchronized (suggestSolrServer) {
             suggestSolrServer.notify();
         }
+        suggestSolrServer.shutdown();
     }
 
     @Override
