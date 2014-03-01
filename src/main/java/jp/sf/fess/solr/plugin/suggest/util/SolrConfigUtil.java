@@ -133,6 +133,9 @@ public final class SolrConfigUtil {
                         }
                     }
                 }
+                if (solrServer instanceof SolrLibHttpSolrServer) {
+                    ((SolrLibHttpSolrServer) solrServer).init();
+                }
                 suggestUpdateConfig.setSolrServer(solrServer);
             } catch (final Exception e) {
                 throw new FessSuggestException("Failed to load SolrServer.", e);
