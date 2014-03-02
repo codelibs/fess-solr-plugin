@@ -31,13 +31,13 @@ public class SuggestItem {
             .synchronizedList(new ArrayList<String>());
 
     private final List<String> fieldNameList = Collections
-            .synchronizedList(new ArrayList<String>());
+            .synchronizedList(new ArrayList<String>()); // TODO Set?
 
-    private List<String> labels = Collections
-            .synchronizedList(new ArrayList<String>());
+    private final List<String> labels = Collections
+            .synchronizedList(new ArrayList<String>()); // TODO Set?
 
-    private List<String> roles = Collections
-            .synchronizedList(new ArrayList<String>());
+    private final List<String> roles = Collections
+            .synchronizedList(new ArrayList<String>()); // TODO Set?
 
     private volatile long count = 1;
 
@@ -79,7 +79,7 @@ public class SuggestItem {
 
     public void setLabels(final List<String> labels) {
         this.labels.clear();
-        for(String label: labels) {
+        for (final String label : labels) {
             this.labels.add(label);
         }
     }
@@ -90,7 +90,7 @@ public class SuggestItem {
 
     public void setRoles(final List<String> roles) {
         this.roles.clear();
-        for(String label: roles) {
+        for (final String label : roles) {
             this.roles.add(label);
         }
     }
@@ -171,12 +171,21 @@ public class SuggestItem {
         for (final String role : roles) {
             doc.addField(SuggestConstants.SuggestFieldNames.ROLES, role);
         }
-        doc.addField("id", getDocumentId());
+        doc.addField(SuggestConstants.SuggestFieldNames.ID, getDocumentId());
 
         return doc;
     }
 
     public String getDocumentId() {
         return text;
+    }
+
+    @Override
+    public String toString() {
+        return "SuggestItem [text=" + text + ", readingList=" + readingList
+                + ", fieldNameList=" + fieldNameList + ", labels=" + labels
+                + ", roles=" + roles + ", count=" + count + ", expires="
+                + expires + ", expiresField=" + expiresField + ", segment="
+                + segment + ", segmentField=" + segmentField + "]";
     }
 }

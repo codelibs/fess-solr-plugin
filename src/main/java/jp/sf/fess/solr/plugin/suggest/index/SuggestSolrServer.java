@@ -33,6 +33,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class SuggestSolrServer {
+    private static final String IDS = "ids";
+
+    private static final String GET_PATH = "/get";
+
     private static final String MATCH_ALL_QUERY = "*:*";
 
     private static final Logger logger = LoggerFactory
@@ -84,7 +88,8 @@ public class SuggestSolrServer {
 
         final SolrQuery solrQuery = new SolrQuery();
         solrQuery.setQuery(query);
-        solrQuery.setFields(new String[] { "id",
+        solrQuery.setFields(new String[] {
+                SuggestConstants.SuggestFieldNames.ID,
                 SuggestConstants.SuggestFieldNames.COUNT,
                 SuggestConstants.SuggestFieldNames.LABELS,
                 SuggestConstants.SuggestFieldNames.ROLES,
@@ -97,8 +102,8 @@ public class SuggestSolrServer {
     public SolrDocumentList get(final String ids) throws IOException,
             SolrServerException {
         final SolrQuery solrQuery = new SolrQuery();
-        solrQuery.setRequestHandler("/get");
-        solrQuery.set("ids", ids);
+        solrQuery.setRequestHandler(GET_PATH);
+        solrQuery.set(IDS, ids);
         final QueryResponse response = solrServer.query(solrQuery,
                 SolrRequest.METHOD.POST);
         return response.getResults();

@@ -19,8 +19,8 @@ package jp.sf.fess.solr.plugin.suggest;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Queue;
-import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import jp.sf.fess.solr.plugin.suggest.entity.SuggestFieldInfo;
@@ -54,13 +54,13 @@ public class SuggestUpdateController {
 
     protected int limitTermQueuingNum = 50000;
 
-    protected final Queue<Request> requestQueue = new ConcurrentLinkedQueue<Request>();
+    protected final BlockingQueue<Request> requestQueue = new LinkedBlockingQueue<Request>();
 
     protected final List<String> labelFieldNameList = Collections
-            .synchronizedList(new ArrayList<String>());
+            .synchronizedList(new ArrayList<String>()); // TODO
 
     protected final List<String> roleFieldNameList = Collections
-            .synchronizedList(new ArrayList<String>());
+            .synchronizedList(new ArrayList<String>()); // TODO
 
     protected final List<SuggestFieldInfo> suggestFieldInfoList;
 
@@ -125,9 +125,6 @@ public class SuggestUpdateController {
 
     public void addTransactionLog(final TransactionLog translog) {
         transactionLogParseTask.addTransactionLog(translog);
-        synchronized (transactionLogParseTask) {
-            transactionLogParseTask.notify();
-        }
     }
 
     public void close() {
@@ -135,20 +132,22 @@ public class SuggestUpdateController {
             logger.info("closing suggestController");
         }
         updateTask.close();
-        synchronized (updateTask) {
-            updateTask.notify();
-        }
         transactionLogParseTask.close();
-        synchronized (transactionLogParseTask) {
-            transactionLogParseTask.notify();
-        }
         indexUpdater.close();
         requestQueue.clear();
         try {
             transactionLogParseTask.join();
+        } catch (final InterruptedException e) {
+            //ignore
+        }
+        try {
             updateTask.join();
+        } catch (final InterruptedException e) {
+            //ignore
+        }
+        try {
             indexUpdater.join();
-        } catch(InterruptedException e) {
+        } catch (final InterruptedException e) {
             //ignore
         }
     }
@@ -169,9 +168,10 @@ public class SuggestUpdateController {
             }
         }
 
-        requestQueue.add(request);
-        synchronized (updateTask) {
-            updateTask.notify();
+        try {
+            requestQueue.put(request);
+        } catch (final Exception e) {
+            logger.warn("Failed to add " + request, e);
         }
     }
 
@@ -190,17 +190,11 @@ public class SuggestUpdateController {
         public void run() {
             running.set(true);
             while (running.get()) {
-                final Request request = requestQueue.poll();
-                if (request == null) {
-                    //waiting next request.
-                    try {
-                        synchronized (this) {
-                            this.wait(config.getUpdateInterval());
-                        }
-                    } catch (final InterruptedException e) {
-                        break;
-                    }
-                    continue;
+                Request request;
+                try {
+                    request = requestQueue.take();
+                } catch (final InterruptedException e) {
+                    break;
                 }
 
                 switch (request.type) {
@@ -218,7 +212,7 @@ public class SuggestUpdateController {
                                 .getSuggestNormalizer();
                         final SolrInputDocument doc = (SolrInputDocument) request.obj;
 
-                        //create documentReader
+                        // create documentReader
                         final DocumentReader reader = new DocumentReader(
                                 tokenizerFactory, converter, normalizer, doc,
                                 fieldNameList, labelFieldNameList,
@@ -245,7 +239,7 @@ public class SuggestUpdateController {
                     if (logger.isDebugEnabled()) {
                         logger.debug("updateTask finish add. took:"
                                 + (System.currentTimeMillis() - start)
-                                + "  count: " + count);
+                                + " count: " + count);
                     }
                     break;
                 case COMMIT:
@@ -287,7 +281,7 @@ public class SuggestUpdateController {
 
         protected AtomicBoolean isRunning = new AtomicBoolean(false);
 
-        protected Queue<TransactionLog> transactionLogQueue = new ConcurrentLinkedQueue<TransactionLog>();
+        protected BlockingQueue<TransactionLog> transactionLogQueue = new LinkedBlockingQueue<TransactionLog>();
 
         protected final TransactionLogParseListener listener;
 
@@ -304,7 +298,11 @@ public class SuggestUpdateController {
         }
 
         public void addTransactionLog(final TransactionLog translog) {
-            transactionLogQueue.add(translog);
+            try {
+                transactionLogQueue.put(translog);
+            } catch (final Exception e) {
+                logger.warn("Failed to add " + translog, e);
+            }
         }
 
         @Override
@@ -315,18 +313,11 @@ public class SuggestUpdateController {
 
             isRunning.set(true);
             while (isRunning.get()) {
-                final TransactionLog translog = transactionLogQueue.poll();
-                if (translog == null) {
-                    try {
-                        synchronized (this) {
-                            if (transactionLogQueue.isEmpty()) {
-                                this.wait(60 * 1000);
-                            }
-                        }
-                    } catch (final InterruptedException e) {
-                        break;
-                    }
-                    continue;
+                TransactionLog translog;
+                try {
+                    translog = transactionLogQueue.take();
+                } catch (final InterruptedException e1) {
+                    break;
                 }
 
                 if (logger.isInfoEnabled()) {

@@ -18,13 +18,13 @@ package jp.sf.fess.solr.plugin.suggest.index;
 
 import java.io.IOException;
 import java.io.Reader;
-import java.io.StringReader;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 
 import jp.sf.fess.solr.plugin.suggest.entity.SuggestItem;
 import jp.sf.fess.suggest.converter.SuggestReadingConverter;
+import jp.sf.fess.suggest.io.AccessibleStringReader;
 import jp.sf.fess.suggest.normalizer.SuggestNormalizer;
 
 import org.apache.lucene.analysis.Tokenizer;
@@ -33,6 +33,7 @@ import org.apache.lucene.analysis.util.TokenizerFactory;
 import org.apache.solr.common.SolrInputDocument;
 import org.apache.solr.common.SolrInputField;
 import org.apache.solr.common.util.DateUtil;
+import org.codelibs.core.util.StringUtil;
 
 public class DocumentReader {
     private final List<String> targetFields;
@@ -69,15 +70,14 @@ public class DocumentReader {
             final SolrInputDocument solrInputDocument,
             final List<String> targetFields,
             final List<String> targetLabelFields,
-            final List<String> targetRoleFields,
-            final String expiresFidld,
+            final List<String> targetRoleFields, final String expiresField,
             final String segmentField) {
         this.solrInputDocument = solrInputDocument;
         this.targetFields = targetFields;
         this.targetLabelFields = targetLabelFields;
         this.targetRoleFields = targetRoleFields;
         this.tokenizerFactory = tokenizerFactory;
-        expiresField = expiresFidld;
+        this.expiresField = expiresField;
         this.segmentField = segmentField;
         this.suggestReadingConverter = suggestReadingConverter;
         this.suggestNormalizer = suggestNormalizer;
@@ -93,7 +93,7 @@ public class DocumentReader {
         if (segmentObj != null) {
             segment = segmentObj.toString();
         } else {
-            segment = "";
+            segment = StringUtil.EMPTY;
         }
     }
 
@@ -171,14 +171,13 @@ public class DocumentReader {
             break;
         }
 
-
         item.addFieldName(fieldName);
         item.setText(text);
         if (suggestReadingConverter != null) {
             final List<String> readingList = suggestReadingConverter
                     .convert(item.getText());
             for (final String reading : readingList) {
-                item.addReading(reading.toString());
+                item.addReading(reading);
             }
         } else {
             item.addReading(text);
@@ -192,8 +191,8 @@ public class DocumentReader {
         if (nextFieldString == null) {
             return null;
         }
-        final Reader rd = new StringReader(nextFieldString);
-        final Tokenizer t = tokenizerFactory.create(rd);
+        final Reader rd = new AccessibleStringReader(nextFieldString);
+        final Tokenizer t = tokenizerFactory.create(rd); // TODO reuse?
         t.reset();
         return t;
     }
@@ -212,10 +211,11 @@ public class DocumentReader {
                 continue;
             }
 
-            fieldValue = new StringBuilder();
+            fieldValue = new StringBuilder(1000);
             for (final Object val : valList) {
                 fieldValue.append(val.toString());
                 fieldValue.append(' ');
+                // TODO break if a long text
             }
             break;
         }

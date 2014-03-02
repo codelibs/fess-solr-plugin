@@ -199,13 +199,17 @@ public class SuggestUpdateControllerTest extends TestCase {
             Thread.sleep(5 * 1000);
 
             //assert
-            assertTrue(suggestSolrServer.select("*:*").getNumFound() == 2);
-            assertTrue(suggestSolrServer.select(
-                    SuggestConstants.SuggestFieldNames.READING + ":mikan")
-                    .getNumFound() == 1);
-            assertTrue(suggestSolrServer.select(
-                    SuggestConstants.SuggestFieldNames.READING + ":rinngo")
-                    .getNumFound() == 1);
+            assertEquals(2, suggestSolrServer.select("*:*").getNumFound());
+            assertEquals(
+                    1,
+                    suggestSolrServer.select(
+                            SuggestConstants.SuggestFieldNames.READING
+                                    + ":mikan").getNumFound());
+            assertEquals(
+                    1,
+                    suggestSolrServer.select(
+                            SuggestConstants.SuggestFieldNames.READING
+                                    + ":rinngo").getNumFound());
 
             controller.deleteByQuery(config.getExpiresField() + ":[* TO "
                     + prevDate + "] NOT segment:hogehoge");
@@ -213,13 +217,17 @@ public class SuggestUpdateControllerTest extends TestCase {
             Thread.sleep(5 * 1000);
 
             //assert
-            assertTrue(suggestSolrServer.select("*:*").getNumFound() == 1);
-            assertTrue(suggestSolrServer.select(
-                    SuggestConstants.SuggestFieldNames.READING + ":mikan")
-                    .getNumFound() == 1);
-            assertTrue(suggestSolrServer.select(
-                    SuggestConstants.SuggestFieldNames.READING + ":rinngo")
-                    .getNumFound() == 0);
+            assertEquals(1, suggestSolrServer.select("*:*").getNumFound());
+            assertEquals(
+                    1,
+                    suggestSolrServer.select(
+                            SuggestConstants.SuggestFieldNames.READING
+                                    + ":mikan").getNumFound());
+            assertEquals(
+                    0,
+                    suggestSolrServer.select(
+                            SuggestConstants.SuggestFieldNames.READING
+                                    + ":rinngo").getNumFound());
 
         } catch (final Exception e) {
             e.printStackTrace();

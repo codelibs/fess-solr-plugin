@@ -34,6 +34,8 @@ public final class TransactionLogUtil {
 
     private static final String PREFIX = "suggest-";
 
+    private static volatile Constructor<TransactionLog> transactionLogConstructor;
+
     private TransactionLogUtil() {
     }
 
@@ -51,12 +53,19 @@ public final class TransactionLogUtil {
                     + (System.currentTimeMillis() - start) + " file="
                     + file.getAbsolutePath());
         }
-        final Class<TransactionLog> cls = TransactionLog.class;
-        final Constructor<TransactionLog> constructor = cls
-                .getDeclaredConstructor(File.class, Collection.class,
-                        Boolean.TYPE);
-        constructor.setAccessible(true);
-        return constructor.newInstance(file, globalStrings, openExisting);
+
+        if (transactionLogConstructor == null) {
+            synchronized (TransactionLogUtil.class) {
+                if (transactionLogConstructor == null) {
+                    final Class<TransactionLog> cls = TransactionLog.class;
+                    transactionLogConstructor = cls.getDeclaredConstructor(
+                            File.class, Collection.class, Boolean.TYPE);
+                    transactionLogConstructor.setAccessible(true);
+                }
+            }
+        }
+        return transactionLogConstructor.newInstance(file, globalStrings,
+                openExisting);
     }
 
     public static void clearSuggestTransactionLog(final String dir) {
@@ -65,11 +74,8 @@ public final class TransactionLogUtil {
             return;
         }
         for (final File f : d.listFiles()) {
-            if (f.isFile() && f.getName().startsWith(PREFIX)) {
-                final boolean deleted = f.delete();
-                if (!deleted) {
-                    logger.warn("Failed to delete " + f.getAbsolutePath());
-                }
+            if (f.isFile() && f.getName().startsWith(PREFIX) && !f.delete()) {
+                logger.warn("Failed to delete " + f.getAbsolutePath());
             }
         }
     }

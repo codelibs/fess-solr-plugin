@@ -22,8 +22,6 @@ import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicLong;
 
 import jp.sf.fess.solr.plugin.suggest.entity.SuggestItem;
 import jp.sf.fess.solr.plugin.suggest.enums.RequestType;
@@ -39,15 +37,18 @@ public class IndexUpdater extends Thread {
     private static final Logger logger = LoggerFactory
             .getLogger(IndexUpdater.class);
 
+    // TODO BlockingQueue?
     protected Queue<Request> suggestRequestQueue = new ConcurrentLinkedQueue<Request>();
 
     protected final SuggestSolrServer suggestSolrServer;
 
     protected AtomicBoolean running = new AtomicBoolean(false);
 
-    protected AtomicLong updateInterval = new AtomicLong(10 * 1000);
+    protected long updateInterval = 10 * 1000;
 
-    protected AtomicInteger maxUpdateNum = new AtomicInteger(10000);
+    protected int maxUpdateNum = 10000;
+
+    protected int maxIDsBufferCapacity = 100000;
 
     public IndexUpdater(final SuggestSolrServer suggestSolrServer) {
         super("SuggestIndexUpdater");
@@ -55,7 +56,7 @@ public class IndexUpdater extends Thread {
     }
 
     public void setUpdateInterval(final long updateInterval) {
-        this.updateInterval.set(updateInterval);
+        this.updateInterval = updateInterval;
     }
 
     public int getQueuingItemNum() {
@@ -99,17 +100,18 @@ public class IndexUpdater extends Thread {
         if (logger.isInfoEnabled()) {
             logger.info("Start indexUpdater");
         }
+
+        StringBuilder ids = new StringBuilder(maxIDsBufferCapacity);
+        final Request[] requestArray = new Request[maxUpdateNum];
+        final SuggestItem[] suggestItemArray = new SuggestItem[maxUpdateNum];
         running.set(true);
         while (running.get()) {
-            final int max = maxUpdateNum.get();
-            final Request[] requestArray = new Request[max];
             int requestNum = 0;
-            for (int i = 0; i < max; i++) {
+            for (int i = 0; i < maxUpdateNum; i++) {
                 final Request request = suggestRequestQueue.peek();
                 if (request == null) {
                     break;
-                }
-                if (request.type == RequestType.ADD) {
+                } else if (request.type == RequestType.ADD) {
                     suggestRequestQueue.poll();
 
                     //merge duplicate items
@@ -137,15 +139,19 @@ public class IndexUpdater extends Thread {
             }
 
             if (requestNum == 0) {
-                try {
-                    try {
-                        //wait next item...
-                        synchronized (suggestSolrServer) {
-                            suggestSolrServer.wait(updateInterval.get());
-                        }
-                    } catch (final InterruptedException e) {
-                        break;
+                if (ids.capacity() > maxIDsBufferCapacity) {
+                    if (logger.isDebugEnabled()) {
+                        logger.debug("Clear IDs buffer string.");
                     }
+                    ids = new StringBuilder(maxIDsBufferCapacity);
+                }
+                try {
+                    //wait next item...
+                    synchronized (suggestSolrServer) {
+                        suggestSolrServer.wait(updateInterval);
+                    }
+                } catch (final InterruptedException e) {
+                    break;
                 } catch (final Exception e) {
                     //ignore
                 }
@@ -156,13 +162,12 @@ public class IndexUpdater extends Thread {
             case ADD:
                 final long start = System.currentTimeMillis();
                 if (logger.isDebugEnabled()) {
-                    logger.debug("Add " + requestNum + "documents");
+                    logger.debug("Add " + requestNum + " documents");
                 }
 
-                final SuggestItem[] suggestItemArray = new SuggestItem[requestNum];
                 int itemSize = 0;
 
-                final StringBuilder ids = new StringBuilder(100000);
+                ids.setLength(0);
                 for (int i = 0; i < requestNum; i++) {
                     final Request request = requestArray[i];
                     final SuggestItem item = (SuggestItem) request.obj;
@@ -244,7 +249,8 @@ public class IndexUpdater extends Thread {
             if (documentList != null) {
                 int itemCount = 0;
                 for (final SolrDocument doc : documentList) {
-                    final Object idObj = doc.getFieldValue("id");
+                    final Object idObj = doc
+                            .getFieldValue(SuggestConstants.SuggestFieldNames.ID);
                     if (idObj == null) {
                         continue;
                     }
