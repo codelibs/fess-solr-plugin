@@ -39,6 +39,8 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.http.auth.AuthScope;
 import org.apache.http.auth.Credentials;
 import org.apache.http.auth.UsernamePasswordCredentials;
+import org.apache.lucene.analysis.util.FilesystemResourceLoader;
+import org.apache.lucene.analysis.util.ResourceLoader;
 import org.apache.lucene.analysis.util.TokenizerFactory;
 import org.apache.solr.client.solrj.SolrServer;
 import org.apache.solr.core.SolrConfig;
@@ -385,6 +387,16 @@ public final class SolrConfigUtil {
                             .getConstructor(Map.class);
                     tokenizerFactory = (TokenizerFactory) constructor
                             .newInstance(tokenizerConfig.getArgs());
+                    try {
+                        Class[] params   = new Class[]{ ResourceLoader.class };
+                        Method inform = cls.getDeclaredMethod("inform", params);
+                        Object[] args   = new Object[]{ new FilesystemResourceLoader() };
+                        inform.invoke(tokenizerFactory, args);
+                    } catch (NoSuchMethodException e) {
+                        //ignore
+                    } catch (Exception e) {
+                        logger.warn("Failed to execute inform of tokenizer.", e);
+                    }
                 }
 
                 //create converter
