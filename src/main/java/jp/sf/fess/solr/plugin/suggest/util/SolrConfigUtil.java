@@ -229,10 +229,18 @@ public final class SolrConfigUtil {
                             }
                         }
                         if (!args.containsKey(USER_DICT_PATH)) {
-                            args.put(USER_DICT_PATH,
-                                    SuggestConstants.USER_DICT_PATH);
-                            args.put(USER_DICT_ENCODING,
-                                    SuggestConstants.USER_DICT_ENCODING);
+                            String userDictPath = System.getProperty(
+                                    SuggestConstants.USER_DICT_PATH, "");
+                            if(StringUtils.isNotBlank(userDictPath)) {
+                                args.put(USER_DICT_PATH,
+                                        userDictPath);
+                            }
+                            String userDictEncoding = System.getProperty(
+                                    SuggestConstants.USER_DICT_ENCODING, "");
+                            if(StringUtils.isNotBlank(userDictEncoding)) {
+                                args.put(USER_DICT_ENCODING,
+                                        userDictEncoding);
+                            }
                         }
                         tokenizerConfig.setArgs(args);
 
