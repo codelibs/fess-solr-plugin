@@ -398,9 +398,7 @@ public class SuggestUpdateControllerTest extends TestCase {
             final File classPath = new File(this.getClass().getClassLoader()
                     .getResource("").getPath());
             final File file = new File(classPath, "tlog.0000000000000000059");
-            final TransactionLog translog = TransactionLogUtil
-                    .createSuggestTransactionLog(file, null, true);
-            controller.addTransactionLog(translog);
+            controller.addTransactionLog(file);
 
             Thread.sleep(10 * 1000);
             assertTrue(suggestSolrServer.select("*:*").getNumFound() > 100);

@@ -16,6 +16,7 @@
 
 package jp.sf.fess.solr.plugin.suggest;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -29,6 +30,7 @@ import jp.sf.fess.solr.plugin.suggest.enums.RequestType;
 import jp.sf.fess.solr.plugin.suggest.index.DocumentReader;
 import jp.sf.fess.solr.plugin.suggest.index.IndexUpdater;
 import jp.sf.fess.solr.plugin.suggest.index.SuggestSolrServer;
+import jp.sf.fess.solr.plugin.suggest.util.TransactionLogUtil;
 import jp.sf.fess.suggest.converter.SuggestReadingConverter;
 import jp.sf.fess.suggest.exception.FessSuggestException;
 import jp.sf.fess.suggest.normalizer.SuggestNormalizer;
@@ -123,7 +125,7 @@ public class SuggestUpdateController {
         request(new Request(RequestType.DELETE_BY_QUERY, query));
     }
 
-    public void addTransactionLog(final TransactionLog translog) {
+    public void addTransactionLog(final File translog) {
         transactionLogParseTask.addTransactionLog(translog);
     }
 
@@ -281,7 +283,7 @@ public class SuggestUpdateController {
 
         protected AtomicBoolean isRunning = new AtomicBoolean(false);
 
-        protected BlockingQueue<TransactionLog> transactionLogQueue = new LinkedBlockingQueue<TransactionLog>();
+        protected BlockingQueue<File> transactionLogQueue = new LinkedBlockingQueue<File>();
 
         protected final TransactionLogParseListener listener;
 
@@ -297,7 +299,7 @@ public class SuggestUpdateController {
             interrupt();
         }
 
-        public void addTransactionLog(final TransactionLog translog) {
+        public void addTransactionLog(final File translog) {
             try {
                 transactionLogQueue.put(translog);
             } catch (final Exception e) {
@@ -313,11 +315,28 @@ public class SuggestUpdateController {
 
             isRunning.set(true);
             while (isRunning.get()) {
+                File file;
                 TransactionLog translog;
                 try {
-                    translog = transactionLogQueue.take();
+                    file = transactionLogQueue.take();
                 } catch (final InterruptedException e1) {
                     break;
+                }
+                if(!file.exists()) {
+                    logger.warn(file.getAbsolutePath() + " doesn't exist.");
+                    continue;
+                }
+                if(logger.isInfoEnabled()) {
+                    logger.info("Loading... " + file.getAbsolutePath());
+                }
+
+                try {
+                    translog = TransactionLogUtil
+                            .createSuggestTransactionLog(file, null, true);
+                } catch (Exception e) {
+                    logger.warn("Failed to create transactionLog instance. " + file.getAbsolutePath()
+                            , e);
+                    continue;
                 }
 
                 if (logger.isInfoEnabled()) {

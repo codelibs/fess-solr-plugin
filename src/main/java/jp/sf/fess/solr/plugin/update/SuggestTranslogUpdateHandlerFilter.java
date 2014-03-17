@@ -29,7 +29,6 @@ import jp.sf.fess.solr.plugin.suggest.util.TransactionLogUtil;
 
 import org.apache.solr.core.SolrCore;
 import org.apache.solr.update.CommitUpdateCommand;
-import org.apache.solr.update.TransactionLog;
 import org.apache.solr.update.UpdateLog;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -88,15 +87,9 @@ public class SuggestTranslogUpdateHandlerFilter extends UpdateHandlerFilter {
         final File logFile = new File(logDir, lastLogName);
         if(logFile.exists()) {
             if (logger.isInfoEnabled()) {
-                logger.info("Loading... " + logFile.getAbsolutePath());
+                logger.info("Create " + logFile.getAbsolutePath());
             }
-            try {
-                final TransactionLog transactionLog = TransactionLogUtil
-                        .createSuggestTransactionLog(logFile, null, true);
-                suggestUpdateController.addTransactionLog(transactionLog);
-            } catch (final Exception e) {
-                logger.warn("Failed to add transactionLog", e);
-            }
+            suggestUpdateController.addTransactionLog(logFile);
         } else {
             if(logger.isInfoEnabled()) {
                 logger.info(logFile.getName() + " does not exist.");
