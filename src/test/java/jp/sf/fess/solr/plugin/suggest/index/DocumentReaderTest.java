@@ -54,48 +54,73 @@ public class DocumentReaderTest extends TestCase {
             int count = 0;
             while ((item = reader.next()) != null) {
                 switch (count) {
-                case 0:
-                    assertEquals("検索", item.getText());
-                    assertTrue(item.getReadingList().contains("kensaku"));
-                    assertTrue(item.getReadingList().contains("kennsaku"));
-                    assertEquals("content", item.getFieldNameList().get(0));
-                    break;
-                case 1:
-                    assertEquals("エンジン", item.getText());
-                    assertTrue(item.getReadingList().contains("ennjinn"));
-                    assertTrue(item.getReadingList().contains("enjinn"));
-                    assertEquals("content", item.getFieldNameList().get(0));
-                    break;
-                case 2:
-                    assertEquals("検索エンジン", item.getText());
-                    assertTrue(item.getReadingList()
-                            .contains("kennsakuennjinn"));
-                    assertEquals("content", item.getFieldNameList().get(0));
-                    break;
-                case 3:
-                    assertEquals("隣", item.getText());
-                    assertTrue(item.getReadingList().contains("tonari"));
-                    assertEquals("content2", item.getFieldNameList().get(0));
-                    break;
-                case 4:
-                    assertEquals("客", item.getText());
-                    assertTrue(item.getReadingList().contains("kyaku"));
-                    assertEquals("content2", item.getFieldNameList().get(0));
-                    break;
-                case 5:
-                    assertEquals("柿", item.getText());
-                    assertTrue(item.getReadingList().contains("kaki"));
-                    assertEquals("content2", item.getFieldNameList().get(0));
-                    break;
-                case 6:
-                    assertEquals("客", item.getText());
-                    assertTrue(item.getReadingList().contains("kyaku"));
-                    assertEquals("content2", item.getFieldNameList().get(0));
-                    break;
+                    case 0:
+                        assertEquals("検索", item.getText());
+                        assertTrue(item.getReadingList().contains("kensaku"));
+                        assertTrue(item.getReadingList().contains("kennsaku"));
+                        assertEquals("content", item.getFieldNameList().get(0));
+                        break;
+                    case 1:
+                        assertEquals("エンジン", item.getText());
+                        assertTrue(item.getReadingList().contains("ennjinn"));
+                        assertTrue(item.getReadingList().contains("enjinn"));
+                        assertEquals("content", item.getFieldNameList().get(0));
+                        break;
+                    case 2:
+                        assertEquals("検索エンジン", item.getText());
+                        assertTrue(item.getReadingList()
+                                .contains("kennsakuennjinn"));
+                        assertEquals("content", item.getFieldNameList().get(0));
+                        break;
+                    case 3:
+                        assertEquals("隣", item.getText());
+                        assertTrue(item.getReadingList().contains("tonari"));
+                        assertEquals("content2", item.getFieldNameList().get(0));
+                        break;
+                    case 4:
+                        assertEquals("の", item.getText());
+                        assertTrue(item.getReadingList().contains("no"));
+                        assertEquals("content2", item.getFieldNameList().get(0));
+                        break;
+                    case 5:
+                        assertEquals("客", item.getText());
+                        assertTrue(item.getReadingList().contains("kyaku"));
+                        assertEquals("content2", item.getFieldNameList().get(0));
+                        break;
+                    case 6:
+                        assertEquals("は", item.getText());
+                        assertTrue(item.getReadingList().contains("ha"));
+                        assertEquals("content2", item.getFieldNameList().get(0));
+                        break;
+                    case 7:
+                        assertEquals("よく", item.getText());
+                        assertTrue(item.getReadingList().contains("yoku"));
+                        assertEquals("content2", item.getFieldNameList().get(0));
+                        break;
+                    case 8:
+                        assertEquals("柿", item.getText());
+                        assertTrue(item.getReadingList().contains("kaki"));
+                        assertEquals("content2", item.getFieldNameList().get(0));
+                        break;
+                    case 9:
+                        assertEquals("食う", item.getText());
+                        assertTrue(item.getReadingList().contains("kuu"));
+                        assertEquals("content2", item.getFieldNameList().get(0));
+                        break;
+                    case 10:
+                        assertEquals("客", item.getText());
+                        assertTrue(item.getReadingList().contains("kyaku"));
+                        assertEquals("content2", item.getFieldNameList().get(0));
+                        break;
+                    case 11:
+                        assertEquals("だ", item.getText());
+                        assertTrue(item.getReadingList().contains("da"));
+                        assertEquals("content2", item.getFieldNameList().get(0));
+                        break;
                 }
                 count++;
             }
-            assertEquals(7, count);
+            assertEquals(12, count);
         } catch (final Exception e) {
             e.printStackTrace();
             fail(e.getMessage());
@@ -131,46 +156,46 @@ public class DocumentReaderTest extends TestCase {
             int count = 0;
             while ((item = reader.next()) != null) {
                 switch (count) {
-                case 0:
-                    assertEquals("検索", item.getText());
-                    assertTrue(item.getReadingList().contains("kensaku"));
-                    assertEquals("content", item.getFieldNameList().get(0));
-                    for (final String label : item.getLabels()) {
-                        assertTrue(label.equals("label1")
-                                || label.equals("label2"));
-                    }
-                    for (final String role : item.getRoles()) {
-                        assertTrue(role.equals("role1")
-                                || role.equals("role2"));
-                    }
-                    break;
-                case 1:
-                    assertEquals("エンジン", item.getText());
-                    assertTrue(item.getReadingList().contains("ennjinn"));
-                    assertEquals("content", item.getFieldNameList().get(0));
-                    for (final String label : item.getLabels()) {
-                        assertTrue(label.equals("label1")
-                                || label.equals("label2"));
-                    }
-                    for (final String role : item.getRoles()) {
-                        assertTrue(role.equals("role1")
-                                || role.equals("role2"));
-                    }
-                    break;
-                case 2:
-                    assertEquals("検索エンジン", item.getText());
-                    assertTrue(item.getReadingList()
-                            .contains("kennsakuennjinn"));
-                    assertEquals("content", item.getFieldNameList().get(0));
-                    for (final String label : item.getLabels()) {
-                        assertTrue(label.equals("label1")
-                                || label.equals("label2"));
-                    }
-                    for (final String role : item.getRoles()) {
-                        assertTrue(role.equals("role1")
-                                || role.equals("role2"));
-                    }
-                    break;
+                    case 0:
+                        assertEquals("検索", item.getText());
+                        assertTrue(item.getReadingList().contains("kensaku"));
+                        assertEquals("content", item.getFieldNameList().get(0));
+                        for (final String label : item.getLabels()) {
+                            assertTrue(label.equals("label1")
+                                    || label.equals("label2"));
+                        }
+                        for (final String role : item.getRoles()) {
+                            assertTrue(role.equals("role1")
+                                    || role.equals("role2"));
+                        }
+                        break;
+                    case 1:
+                        assertEquals("エンジン", item.getText());
+                        assertTrue(item.getReadingList().contains("ennjinn"));
+                        assertEquals("content", item.getFieldNameList().get(0));
+                        for (final String label : item.getLabels()) {
+                            assertTrue(label.equals("label1")
+                                    || label.equals("label2"));
+                        }
+                        for (final String role : item.getRoles()) {
+                            assertTrue(role.equals("role1")
+                                    || role.equals("role2"));
+                        }
+                        break;
+                    case 2:
+                        assertEquals("検索エンジン", item.getText());
+                        assertTrue(item.getReadingList()
+                                .contains("kennsakuennjinn"));
+                        assertEquals("content", item.getFieldNameList().get(0));
+                        for (final String label : item.getLabels()) {
+                            assertTrue(label.equals("label1")
+                                    || label.equals("label2"));
+                        }
+                        for (final String role : item.getRoles()) {
+                            assertTrue(role.equals("role1")
+                                    || role.equals("role2"));
+                        }
+                        break;
                 }
                 count++;
             }

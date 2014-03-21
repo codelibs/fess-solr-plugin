@@ -28,6 +28,8 @@ import java.util.Map;
 import jp.sf.fess.solr.plugin.suggest.SuggestUpdateConfig;
 import jp.sf.fess.solr.plugin.suggest.entity.SuggestFieldInfo;
 import jp.sf.fess.suggest.SuggestConstants;
+import jp.sf.fess.suggest.converter.AlphabetConverter;
+import jp.sf.fess.suggest.converter.KatakanaConverter;
 import jp.sf.fess.suggest.converter.SuggestIntegrateConverter;
 import jp.sf.fess.suggest.converter.SuggestReadingConverter;
 import jp.sf.fess.suggest.exception.FessSuggestException;
@@ -416,6 +418,9 @@ public final class SolrConfigUtil {
                                     converterConfig.getProperties());
                     suggestIntegrateConverter
                             .addConverter(suggestReadingConverter);
+                }
+                if(tokenizerFactory != null) {
+                    suggestIntegrateConverter.setTokenizerFactory(tokenizerFactory);
                 }
                 suggestIntegrateConverter.start();
 
