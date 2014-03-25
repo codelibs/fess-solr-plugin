@@ -78,49 +78,24 @@ public class DocumentReaderTest extends TestCase {
                         assertEquals("content2", item.getFieldNameList().get(0));
                         break;
                     case 4:
-                        assertEquals("の", item.getText());
-                        assertTrue(item.getReadingList().contains("no"));
-                        assertEquals("content2", item.getFieldNameList().get(0));
-                        break;
-                    case 5:
                         assertEquals("客", item.getText());
                         assertTrue(item.getReadingList().contains("kyaku"));
                         assertEquals("content2", item.getFieldNameList().get(0));
                         break;
-                    case 6:
-                        assertEquals("は", item.getText());
-                        assertTrue(item.getReadingList().contains("ha"));
-                        assertEquals("content2", item.getFieldNameList().get(0));
-                        break;
-                    case 7:
-                        assertEquals("よく", item.getText());
-                        assertTrue(item.getReadingList().contains("yoku"));
-                        assertEquals("content2", item.getFieldNameList().get(0));
-                        break;
-                    case 8:
+                    case 5:
                         assertEquals("柿", item.getText());
                         assertTrue(item.getReadingList().contains("kaki"));
                         assertEquals("content2", item.getFieldNameList().get(0));
                         break;
-                    case 9:
-                        assertEquals("食う", item.getText());
-                        assertTrue(item.getReadingList().contains("kuu"));
-                        assertEquals("content2", item.getFieldNameList().get(0));
-                        break;
-                    case 10:
+                    case 6:
                         assertEquals("客", item.getText());
                         assertTrue(item.getReadingList().contains("kyaku"));
-                        assertEquals("content2", item.getFieldNameList().get(0));
-                        break;
-                    case 11:
-                        assertEquals("だ", item.getText());
-                        assertTrue(item.getReadingList().contains("da"));
                         assertEquals("content2", item.getFieldNameList().get(0));
                         break;
                 }
                 count++;
             }
-            assertEquals(12, count);
+            assertEquals(7, count);
         } catch (final Exception e) {
             e.printStackTrace();
             fail(e.getMessage());
