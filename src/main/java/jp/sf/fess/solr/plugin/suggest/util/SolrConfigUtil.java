@@ -28,8 +28,6 @@ import java.util.Map;
 import jp.sf.fess.solr.plugin.suggest.SuggestUpdateConfig;
 import jp.sf.fess.solr.plugin.suggest.entity.SuggestFieldInfo;
 import jp.sf.fess.suggest.SuggestConstants;
-import jp.sf.fess.suggest.converter.AlphabetConverter;
-import jp.sf.fess.suggest.converter.KatakanaConverter;
 import jp.sf.fess.suggest.converter.SuggestIntegrateConverter;
 import jp.sf.fess.suggest.converter.SuggestReadingConverter;
 import jp.sf.fess.suggest.exception.FessSuggestException;
@@ -231,17 +229,15 @@ public final class SolrConfigUtil {
                             }
                         }
                         if (!args.containsKey(USER_DICT_PATH)) {
-                            String userDictPath = System.getProperty(
+                            final String userDictPath = System.getProperty(
                                     SuggestConstants.USER_DICT_PATH, "");
-                            if(StringUtils.isNotBlank(userDictPath)) {
-                                args.put(USER_DICT_PATH,
-                                        userDictPath);
+                            if (StringUtils.isNotBlank(userDictPath)) {
+                                args.put(USER_DICT_PATH, userDictPath);
                             }
-                            String userDictEncoding = System.getProperty(
+                            final String userDictEncoding = System.getProperty(
                                     SuggestConstants.USER_DICT_ENCODING, "");
-                            if(StringUtils.isNotBlank(userDictEncoding)) {
-                                args.put(USER_DICT_ENCODING,
-                                        userDictEncoding);
+                            if (StringUtils.isNotBlank(userDictEncoding)) {
+                                args.put(USER_DICT_ENCODING, userDictEncoding);
                             }
                         }
                         tokenizerConfig.setArgs(args);
@@ -398,13 +394,14 @@ public final class SolrConfigUtil {
                     tokenizerFactory = (TokenizerFactory) constructor
                             .newInstance(tokenizerConfig.getArgs());
                     try {
-                        Class[] params   = new Class[]{ ResourceLoader.class };
-                        Method inform = cls.getDeclaredMethod("inform", params);
-                        Object[] args   = new Object[]{ new FilesystemResourceLoader() };
+                        final Class[] params = new Class[] { ResourceLoader.class };
+                        final Method inform = cls.getDeclaredMethod("inform",
+                                params);
+                        final Object[] args = new Object[] { new FilesystemResourceLoader() };
                         inform.invoke(tokenizerFactory, args);
-                    } catch (NoSuchMethodException e) {
+                    } catch (final NoSuchMethodException e) {
                         //ignore
-                    } catch (Exception e) {
+                    } catch (final Exception e) {
                         logger.warn("Failed to execute inform of tokenizer.", e);
                     }
                 }
@@ -419,8 +416,9 @@ public final class SolrConfigUtil {
                     suggestIntegrateConverter
                             .addConverter(suggestReadingConverter);
                 }
-                if(tokenizerFactory != null) {
-                    suggestIntegrateConverter.setTokenizerFactory(tokenizerFactory);
+                if (tokenizerFactory != null) {
+                    suggestIntegrateConverter
+                            .setTokenizerFactory(tokenizerFactory);
                 }
                 suggestIntegrateConverter.start();
 

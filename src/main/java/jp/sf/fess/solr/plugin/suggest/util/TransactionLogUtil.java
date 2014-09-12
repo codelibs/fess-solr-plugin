@@ -34,7 +34,18 @@ public final class TransactionLogUtil {
 
     private static final String PREFIX = "suggest-";
 
-    private static volatile Constructor<TransactionLog> transactionLogConstructor;
+    private static Constructor<TransactionLog> transactionLogConstructor;
+
+    {
+        try {
+            final Class<TransactionLog> cls = TransactionLog.class;
+            transactionLogConstructor = cls.getDeclaredConstructor(File.class,
+                    Collection.class, Boolean.TYPE);
+            transactionLogConstructor.setAccessible(true);
+        } catch (final Exception e) {
+            logger.error("Failed to load TransactionLog class.", e);
+        }
+    }
 
     private TransactionLogUtil() {
     }
@@ -54,16 +65,6 @@ public final class TransactionLogUtil {
                     + file.getAbsolutePath());
         }
 
-        if (transactionLogConstructor == null) {
-            synchronized (TransactionLogUtil.class) {
-                if (transactionLogConstructor == null) {
-                    final Class<TransactionLog> cls = TransactionLog.class;
-                    transactionLogConstructor = cls.getDeclaredConstructor(
-                            File.class, Collection.class, Boolean.TYPE);
-                    transactionLogConstructor.setAccessible(true);
-                }
-            }
-        }
         return transactionLogConstructor.newInstance(file, globalStrings,
                 openExisting);
     }
