@@ -36,7 +36,7 @@ public final class TransactionLogUtil {
 
     private static Constructor<TransactionLog> transactionLogConstructor;
 
-    {
+    static {
         try {
             final Class<TransactionLog> cls = TransactionLog.class;
             transactionLogConstructor = cls.getDeclaredConstructor(File.class,
