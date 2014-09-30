@@ -25,16 +25,16 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import jp.sf.fess.solr.plugin.suggest.entity.SuggestFieldInfo;
-import jp.sf.fess.solr.plugin.suggest.entity.SuggestItem;
 import jp.sf.fess.solr.plugin.suggest.enums.RequestType;
 import jp.sf.fess.solr.plugin.suggest.index.DocumentReader;
-import jp.sf.fess.solr.plugin.suggest.index.IndexUpdater;
-import jp.sf.fess.solr.plugin.suggest.index.SuggestSolrServer;
 import jp.sf.fess.solr.plugin.suggest.util.TransactionLogUtil;
 import jp.sf.fess.suggest.converter.SuggestReadingConverter;
+import jp.sf.fess.suggest.entity.SuggestItem;
 import jp.sf.fess.suggest.exception.FessSuggestException;
+import jp.sf.fess.suggest.index.IndexUpdater;
 import jp.sf.fess.suggest.normalizer.SuggestNormalizer;
 
+import jp.sf.fess.suggest.server.SuggestSolrServer;
 import org.apache.lucene.analysis.util.TokenizerFactory;
 import org.apache.solr.common.SolrInputDocument;
 import org.apache.solr.update.TransactionLog;

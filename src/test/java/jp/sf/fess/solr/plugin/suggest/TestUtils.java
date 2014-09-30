@@ -20,12 +20,12 @@ import java.lang.reflect.Constructor;
 import java.util.HashMap;
 import java.util.Map;
 
-import jp.sf.fess.solr.plugin.suggest.index.SuggestSolrServer;
 import jp.sf.fess.suggest.converter.AlphabetConverter;
 import jp.sf.fess.suggest.converter.SuggestIntegrateConverter;
 import jp.sf.fess.suggest.converter.SuggestReadingConverter;
 import jp.sf.fess.suggest.normalizer.SuggestIntegrateNormalizer;
 import jp.sf.fess.suggest.normalizer.SuggestNormalizer;
+import jp.sf.fess.suggest.server.SuggestSolrServer;
 import jp.sf.fess.suggest.util.SuggestUtil;
 
 import org.apache.lucene.analysis.util.TokenizerFactory;
