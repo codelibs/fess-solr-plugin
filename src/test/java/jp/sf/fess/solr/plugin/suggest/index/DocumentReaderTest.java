@@ -20,8 +20,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import jp.sf.fess.solr.plugin.suggest.TestUtils;
-import jp.sf.fess.solr.plugin.suggest.entity.SuggestItem;
 import jp.sf.fess.suggest.converter.SuggestReadingConverter;
+import jp.sf.fess.suggest.entity.SuggestItem;
 import jp.sf.fess.suggest.normalizer.SuggestNormalizer;
 import junit.framework.TestCase;
 

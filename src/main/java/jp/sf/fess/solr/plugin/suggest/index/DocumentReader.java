@@ -22,8 +22,8 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 
-import jp.sf.fess.solr.plugin.suggest.entity.SuggestItem;
 import jp.sf.fess.suggest.converter.SuggestReadingConverter;
+import jp.sf.fess.suggest.entity.SuggestItem;
 import jp.sf.fess.suggest.io.AccessibleStringReader;
 import jp.sf.fess.suggest.normalizer.SuggestNormalizer;
 

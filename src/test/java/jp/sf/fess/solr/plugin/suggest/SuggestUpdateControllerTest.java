@@ -24,12 +24,12 @@ import java.util.Date;
 import java.util.List;
 
 import jp.sf.fess.solr.plugin.suggest.entity.SuggestFieldInfo;
-import jp.sf.fess.solr.plugin.suggest.index.SuggestSolrServer;
 import jp.sf.fess.solr.plugin.suggest.util.TransactionLogUtil;
 import jp.sf.fess.suggest.SuggestConstants;
 import jp.sf.fess.suggest.Suggester;
 import jp.sf.fess.suggest.converter.SuggestReadingConverter;
 import jp.sf.fess.suggest.normalizer.SuggestNormalizer;
+import jp.sf.fess.suggest.server.SuggestSolrServer;
 import junit.framework.TestCase;
 
 import org.apache.lucene.analysis.util.TokenizerFactory;
