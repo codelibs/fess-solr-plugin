@@ -16,10 +16,8 @@
 
 package jp.sf.fess.solr.plugin.suggest;
 
-import java.io.File;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.io.*;
+import java.util.*;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -28,6 +26,7 @@ import jp.sf.fess.solr.plugin.suggest.entity.SuggestFieldInfo;
 import jp.sf.fess.solr.plugin.suggest.enums.RequestType;
 import jp.sf.fess.solr.plugin.suggest.index.DocumentReader;
 import jp.sf.fess.solr.plugin.suggest.util.TransactionLogUtil;
+import jp.sf.fess.suggest.SuggestConstants;
 import jp.sf.fess.suggest.converter.SuggestReadingConverter;
 import jp.sf.fess.suggest.entity.SuggestItem;
 import jp.sf.fess.suggest.exception.FessSuggestException;
@@ -37,6 +36,7 @@ import jp.sf.fess.suggest.normalizer.SuggestNormalizer;
 import jp.sf.fess.suggest.server.SuggestSolrServer;
 import org.apache.lucene.analysis.util.TokenizerFactory;
 import org.apache.solr.common.SolrInputDocument;
+import org.apache.solr.core.SolrResourceLoader;
 import org.apache.solr.update.TransactionLog;
 import org.apache.solr.update.UpdateLog;
 import org.slf4j.Logger;
@@ -44,7 +44,7 @@ import org.slf4j.LoggerFactory;
 
 public class SuggestUpdateController {
     private static final Logger logger = LoggerFactory
-            .getLogger(SuggestUpdateController.class);
+        .getLogger(SuggestUpdateController.class);
 
     protected final UpdateTask updateTask;
 
@@ -59,19 +59,19 @@ public class SuggestUpdateController {
     protected final BlockingQueue<Request> requestQueue = new LinkedBlockingQueue<Request>();
 
     protected final List<String> labelFieldNameList = Collections
-            .synchronizedList(new ArrayList<String>()); // TODO
+        .synchronizedList(new ArrayList<String>()); // TODO
 
     protected final List<String> roleFieldNameList = Collections
-            .synchronizedList(new ArrayList<String>()); // TODO
+        .synchronizedList(new ArrayList<String>()); // TODO
 
     protected final List<SuggestFieldInfo> suggestFieldInfoList;
 
     protected final SuggestUpdateConfig config;
 
     public SuggestUpdateController(final SuggestUpdateConfig config,
-            final List<SuggestFieldInfo> fieldInfoList) {
+                                   final List<SuggestFieldInfo> fieldInfoList) {
         final SuggestSolrServer suggestSolrServer = new SuggestSolrServer(
-                config.getSolrServer());
+            config.getSolrServer());
         indexUpdater = new IndexUpdater(suggestSolrServer);
         indexUpdater.setUpdateInterval(config.getUpdateInterval());
         suggestFieldInfoList = fieldInfoList;
@@ -81,22 +81,22 @@ public class SuggestUpdateController {
         updateTask = new UpdateTask();
 
         transactionLogParseTask = new TransactionLogParseTask(
-                new TransactionLogParseListener() {
-                    @Override
-                    public void addCBK(final SolrInputDocument solrInputDocument) {
-                        add(solrInputDocument);
-                    }
+            new TransactionLogParseListener() {
+                @Override
+                public void addCBK(final SolrInputDocument solrInputDocument) {
+                    add(solrInputDocument);
+                }
 
-                    @Override
-                    public void deleteByQueryCBK(final String query) {
-                        deleteByQuery(query);
-                    }
+                @Override
+                public void deleteByQueryCBK(final String query) {
+                    deleteByQuery(query);
+                }
 
-                    @Override
-                    public void commitCBK() {
-                        commit();
-                    }
-                });
+                @Override
+                public void commitCBK() {
+                    commit();
+                }
+            });
     }
 
     public void start() {
@@ -156,13 +156,13 @@ public class SuggestUpdateController {
 
     protected void request(final Request request) {
         while ((requestQueue.size() > limitDocumentQueuingNum || indexUpdater
-                .getQueuingItemNum() > limitTermQueuingNum)
-                && updateTask.isRunning()) {
+            .getQueuingItemNum() > limitTermQueuingNum)
+            && updateTask.isRunning()) {
             try {
                 if (logger.isDebugEnabled()) {
                     logger.debug("waiting dequeue documents... doc:"
-                            + requestQueue.size() + " term:"
-                            + indexUpdater.getQueuingItemNum());
+                        + requestQueue.size() + " term:"
+                        + indexUpdater.getQueuingItemNum());
                 }
                 Thread.sleep(1000);
             } catch (final Exception e) {
@@ -191,7 +191,14 @@ public class SuggestUpdateController {
         @Override
         public void run() {
             running.set(true);
+            boolean commited = false;
+            Set<String> badWordSet = createBadWordSet();
             while (running.get()) {
+                if (commited) {
+                    commited = false;
+                    badWordSet = createBadWordSet();
+                }
+
                 Request request;
                 try {
                     request = requestQueue.take();
@@ -200,58 +207,59 @@ public class SuggestUpdateController {
                 }
 
                 switch (request.type) {
-                case ADD:
-                    int count = 0;
-                    final long start = System.currentTimeMillis();
-                    for (final SuggestFieldInfo fieldInfo : suggestFieldInfoList) {
-                        final List<String> fieldNameList = fieldInfo
+                    case ADD:
+                        int count = 0;
+                        final long start = System.currentTimeMillis();
+                        for (final SuggestFieldInfo fieldInfo : suggestFieldInfoList) {
+                            final List<String> fieldNameList = fieldInfo
                                 .getFieldNameList();
-                        final TokenizerFactory tokenizerFactory = fieldInfo
+                            final TokenizerFactory tokenizerFactory = fieldInfo
                                 .getTokenizerFactory();
-                        final SuggestReadingConverter converter = fieldInfo
+                            final SuggestReadingConverter converter = fieldInfo
                                 .getSuggestReadingConverter();
-                        final SuggestNormalizer normalizer = fieldInfo
+                            final SuggestNormalizer normalizer = fieldInfo
                                 .getSuggestNormalizer();
-                        final SolrInputDocument doc = (SolrInputDocument) request.obj;
+                            final SolrInputDocument doc = (SolrInputDocument) request.obj;
 
-                        // create documentReader
-                        final DocumentReader reader = new DocumentReader(
+                            // create documentReader
+                            final DocumentReader reader = new DocumentReader(
                                 tokenizerFactory, converter, normalizer, doc,
                                 fieldNameList, labelFieldNameList,
                                 roleFieldNameList, config.getExpiresField(),
-                                config.getSegmentField());
-                        SuggestItem item;
-                        try {
-                            while ((item = reader.next()) != null) {
-                                while (count % 10000 == 0
+                                config.getSegmentField(), badWordSet);
+                            SuggestItem item;
+                            try {
+                                while ((item = reader.next()) != null) {
+                                    while (count % 10000 == 0
                                         && indexUpdater.getQueuingItemNum() > limitTermQueuingNum
                                         && isRunning()) {
-                                    Thread.sleep(1000);
+                                        Thread.sleep(1000);
+                                    }
+                                    indexUpdater.addSuggestItem(item);
+                                    count++;
                                 }
-                                indexUpdater.addSuggestItem(item);
-                                count++;
+                            } catch (final InterruptedException e) {
+                                logger.warn("updateTask is interrupted");
+                                break;
+                            } catch (final Exception e) {
+                                logger.warn("Failed to tokenize document.", e);
                             }
-                        } catch (final InterruptedException e) {
-                            logger.warn("updateTask is interrupted");
-                            break;
-                        } catch (final Exception e) {
-                            logger.warn("Failed to tokenize document.", e);
                         }
-                    }
-                    if (logger.isDebugEnabled()) {
-                        logger.debug("updateTask finish add. took:"
+                        if (logger.isDebugEnabled()) {
+                            logger.debug("updateTask finish add. took:"
                                 + (System.currentTimeMillis() - start)
                                 + " count: " + count);
-                    }
-                    break;
-                case COMMIT:
-                    indexUpdater.commit();
-                    break;
-                case DELETE_BY_QUERY:
-                    indexUpdater.deleteByQuery(request.obj.toString());
-                    break;
-                default:
-                    break;
+                        }
+                        break;
+                    case COMMIT:
+                        indexUpdater.commit();
+                        commited = true;
+                        break;
+                    case DELETE_BY_QUERY:
+                        indexUpdater.deleteByQuery(request.obj.toString());
+                        break;
+                    default:
+                        break;
                 }
             }
         }
@@ -263,6 +271,25 @@ public class SuggestUpdateController {
 
         public boolean isRunning() {
             return running.get();
+        }
+
+        private Set<String> createBadWordSet() {
+            Set<String> badWordSet = new HashSet<>();
+            //TODO
+            /*
+            SolrResourceLoader loader = new SolrResourceLoader(SolrResourceLoader.locateSolrHome());
+            try {
+                InputStream is = loader.openConfig(SuggestConstants.BADWORD_FILENAME);
+                BufferedReader br = new BufferedReader(new InputStreamReader(is));
+                String line;
+                while ((line = br.readLine()) != null) {
+                    badWordSet.add(line.trim());
+                }
+            } catch (IOException e) {
+                logger.warn("Failed to load badword file.", e);
+            }
+            */
+            return badWordSet;
         }
     }
 
@@ -279,7 +306,7 @@ public class SuggestUpdateController {
 
     protected static class TransactionLogParseTask extends Thread {
         protected static final Logger logger = LoggerFactory
-                .getLogger(TransactionLogParseTask.class);
+            .getLogger(TransactionLogParseTask.class);
 
         protected AtomicBoolean isRunning = new AtomicBoolean(false);
 
@@ -288,7 +315,7 @@ public class SuggestUpdateController {
         protected final TransactionLogParseListener listener;
 
         public TransactionLogParseTask(
-                final TransactionLogParseListener listener) {
+            final TransactionLogParseListener listener) {
             super();
             this.listener = listener;
         }
@@ -322,20 +349,20 @@ public class SuggestUpdateController {
                 } catch (final InterruptedException e1) {
                     break;
                 }
-                if(!file.exists()) {
+                if (!file.exists()) {
                     logger.warn(file.getAbsolutePath() + " doesn't exist.");
                     continue;
                 }
-                if(logger.isInfoEnabled()) {
+                if (logger.isInfoEnabled()) {
                     logger.info("Loading... " + file.getAbsolutePath());
                 }
 
                 try {
                     translog = TransactionLogUtil
-                            .createSuggestTransactionLog(file, null, true);
+                        .createSuggestTransactionLog(file, null, true);
                 } catch (Exception e) {
                     logger.warn("Failed to create transactionLog instance. " + file.getAbsolutePath()
-                            , e);
+                        , e);
                     continue;
                 }
 
@@ -343,7 +370,7 @@ public class SuggestUpdateController {
                     logger.info("Getting LogReader");
                 }
                 final TransactionLog.LogReader tlogReader = translog
-                        .getReader(0);
+                    .getReader(0);
                 if (tlogReader == null) {
                     logger.warn("Failed to get reader.");
                     continue;
@@ -370,36 +397,36 @@ public class SuggestUpdateController {
 
                         final int operationAndFlags = (Integer) entry.get(0);
                         final int oper = operationAndFlags
-                                & UpdateLog.OPERATION_MASK;
+                            & UpdateLog.OPERATION_MASK;
 
                         switch (oper) {
-                        case UpdateLog.ADD: {
-                            // byte[] idBytes = (byte[]) entry.get(2);
-                            final SolrInputDocument sdoc = (SolrInputDocument) entry
+                            case UpdateLog.ADD: {
+                                // byte[] idBytes = (byte[]) entry.get(2);
+                                final SolrInputDocument sdoc = (SolrInputDocument) entry
                                     .get(entry.size() - 1);
-                            if (logger.isDebugEnabled()) {
-                                logger.debug("add " + sdoc);
+                                if (logger.isDebugEnabled()) {
+                                    logger.debug("add " + sdoc);
+                                }
+                                listener.addCBK(sdoc);
+                                break;
                             }
-                            listener.addCBK(sdoc);
-                            break;
-                        }
-                        case UpdateLog.DELETE_BY_QUERY: {
-                            final String query = (String) entry.get(2);
-                            if (logger.isDebugEnabled()) {
-                                logger.debug("deleteByQuery " + query);
+                            case UpdateLog.DELETE_BY_QUERY: {
+                                final String query = (String) entry.get(2);
+                                if (logger.isDebugEnabled()) {
+                                    logger.debug("deleteByQuery " + query);
+                                }
+                                listener.deleteByQueryCBK(query);
+                                break;
                             }
-                            listener.deleteByQueryCBK(query);
-                            break;
-                        }
-                        case UpdateLog.COMMIT: {
-                            if (logger.isDebugEnabled()) {
-                                logger.debug("commit");
+                            case UpdateLog.COMMIT: {
+                                if (logger.isDebugEnabled()) {
+                                    logger.debug("commit");
+                                }
+                                listener.commitCBK();
+                                break;
                             }
-                            listener.commitCBK();
-                            break;
-                        }
-                        default:
-                            throw new FessSuggestException(
+                            default:
+                                throw new FessSuggestException(
                                     "Unknown Operation! " + oper);
                         }
                     } catch (final FessSuggestException e) {

@@ -17,6 +17,7 @@
 package jp.sf.fess.solr.plugin.suggest.index;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 
 import jp.sf.fess.solr.plugin.suggest.TestUtils;
@@ -48,7 +49,7 @@ public class DocumentReaderTest extends TestCase {
 
         final DocumentReader reader = new DocumentReader(tokenizerFactory,
                 suggestReadingConverter, suggestNormalizer, doc,
-                targetFieldList, labelFieldList, roleFieldList, "", "");
+                targetFieldList, labelFieldList, roleFieldList, "", "", new HashSet<String>());
         SuggestItem item;
         try {
             int count = 0;
@@ -125,7 +126,7 @@ public class DocumentReaderTest extends TestCase {
 
         final DocumentReader reader = new DocumentReader(tokenizerFactory,
                 suggestReadingConverter, suggestNormalizer, doc,
-                targetFieldList, labelFieldList, roleFieldList, "", "");
+                targetFieldList, labelFieldList, roleFieldList, "", "", new HashSet<String>());
         SuggestItem item;
         try {
             int count = 0;

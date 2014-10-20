@@ -21,6 +21,7 @@ import java.io.Reader;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
+import java.util.Set;
 
 import jp.sf.fess.suggest.converter.SuggestReadingConverter;
 import jp.sf.fess.suggest.entity.SuggestItem;
@@ -62,6 +63,8 @@ public class DocumentReader {
 
     private final String segment;
 
+    private final Set<String> badWordSet;
+
     private boolean hasNext = true;
 
     public DocumentReader(final TokenizerFactory tokenizerFactory,
@@ -71,7 +74,7 @@ public class DocumentReader {
             final List<String> targetFields,
             final List<String> targetLabelFields,
             final List<String> targetRoleFields, final String expiresField,
-            final String segmentField) {
+            final String segmentField, final Set<String> badWordSet) {
         this.solrInputDocument = solrInputDocument;
         this.targetFields = targetFields;
         this.targetLabelFields = targetLabelFields;
@@ -81,6 +84,7 @@ public class DocumentReader {
         this.segmentField = segmentField;
         this.suggestReadingConverter = suggestReadingConverter;
         this.suggestNormalizer = suggestNormalizer;
+        this.badWordSet = badWordSet;
 
         final Object expireObj = solrInputDocument.getFieldValue(expiresField);
         if (expireObj != null) {
@@ -110,12 +114,14 @@ public class DocumentReader {
         } else {
             while (hasNext) {
                 if (tokenizer != null) {
-                    if (tokenizer.incrementToken()) {
+                    while (tokenizer.incrementToken()) {
                         final CharTermAttribute att = tokenizer
                                 .getAttribute(CharTermAttribute.class);
                         final SuggestItem item = createSuggestItem(
                                 att.toString(), targetFields.get(fieldPos));
-                        return item;
+                        if(!badWordSet.contains(item.getText())) {
+                            return item;
+                        }
                     }
                     tokenizer.close();
                     tokenizer = null;
