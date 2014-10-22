@@ -57,7 +57,7 @@ public class SuggestTranslogUpdateHandlerFilter extends UpdateHandlerFilter {
         final List<SuggestFieldInfo> suggestFieldInfoList = SolrConfigUtil
                 .getSuggestFieldInfoList(config);
         suggestUpdateController = new SuggestUpdateController(config,
-                suggestFieldInfoList);
+                suggestFieldInfoList, core.getResourceLoader());
         if (config.getLabelFields() != null) {
             for (final String label : config.getLabelFields()) {
                 suggestUpdateController.addLabelFieldName(label);

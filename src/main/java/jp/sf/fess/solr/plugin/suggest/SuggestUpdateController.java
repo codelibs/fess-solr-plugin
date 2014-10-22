@@ -46,6 +46,8 @@ public class SuggestUpdateController {
     private static final Logger logger = LoggerFactory
         .getLogger(SuggestUpdateController.class);
 
+    protected final SolrResourceLoader loader;
+
     protected final UpdateTask updateTask;
 
     protected final TransactionLogParseTask transactionLogParseTask;
@@ -69,7 +71,8 @@ public class SuggestUpdateController {
     protected final SuggestUpdateConfig config;
 
     public SuggestUpdateController(final SuggestUpdateConfig config,
-                                   final List<SuggestFieldInfo> fieldInfoList) {
+                                   final List<SuggestFieldInfo> fieldInfoList,
+                                   final SolrResourceLoader loader) {
         final SuggestSolrServer suggestSolrServer = new SuggestSolrServer(
             config.getSolrServer());
         indexUpdater = new IndexUpdater(suggestSolrServer);
@@ -77,6 +80,7 @@ public class SuggestUpdateController {
         suggestFieldInfoList = fieldInfoList;
 
         this.config = config;
+        this.loader = loader;
 
         updateTask = new UpdateTask();
 
@@ -191,17 +195,16 @@ public class SuggestUpdateController {
         @Override
         public void run() {
             running.set(true);
-            boolean commited = false;
+            boolean updateBadWord = true;
             Set<String> badWordSet = createBadWordSet();
             while (running.get()) {
-                if (commited) {
-                    commited = false;
-                    badWordSet = createBadWordSet();
-                }
-
                 Request request;
                 try {
                     request = requestQueue.take();
+                    if (updateBadWord) {
+                        updateBadWord = false;
+                        badWordSet = createBadWordSet();
+                    }
                 } catch (final InterruptedException e) {
                     break;
                 }
@@ -253,7 +256,7 @@ public class SuggestUpdateController {
                         break;
                     case COMMIT:
                         indexUpdater.commit();
-                        commited = true;
+                        updateBadWord = true;
                         break;
                     case DELETE_BY_QUERY:
                         indexUpdater.deleteByQuery(request.obj.toString());
@@ -275,9 +278,6 @@ public class SuggestUpdateController {
 
         private Set<String> createBadWordSet() {
             Set<String> badWordSet = new HashSet<>();
-            //TODO
-            /*
-            SolrResourceLoader loader = new SolrResourceLoader(SolrResourceLoader.locateSolrHome());
             try {
                 InputStream is = loader.openConfig(SuggestConstants.BADWORD_FILENAME);
                 BufferedReader br = new BufferedReader(new InputStreamReader(is));
@@ -288,7 +288,6 @@ public class SuggestUpdateController {
             } catch (IOException e) {
                 logger.warn("Failed to load badword file.", e);
             }
-            */
             return badWordSet;
         }
     }

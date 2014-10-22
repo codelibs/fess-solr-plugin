@@ -37,6 +37,7 @@ import org.apache.solr.common.SolrDocument;
 import org.apache.solr.common.SolrDocumentList;
 import org.apache.solr.common.SolrInputDocument;
 import org.apache.solr.common.util.DateUtil;
+import org.apache.solr.core.SolrResourceLoader;
 import org.apache.solr.update.TransactionLog;
 
 public class SuggestUpdateControllerTest extends TestCase {
@@ -60,7 +61,8 @@ public class SuggestUpdateControllerTest extends TestCase {
             final SuggestUpdateConfig config = TestUtils
                     .getSuggestUpdateConfig();
             final SuggestUpdateController controller = new SuggestUpdateController(
-                    config, getSuggestFieldInfoList(config, false));
+                    config, getSuggestFieldInfoList(config, false),
+                new SolrResourceLoader(SolrResourceLoader.locateSolrHome()));
             controller.start();
 
             final SolrInputDocument doc = new SolrInputDocument();
@@ -118,7 +120,8 @@ public class SuggestUpdateControllerTest extends TestCase {
             final SuggestUpdateConfig config = TestUtils
                     .getSuggestUpdateConfig();
             final SuggestUpdateController controller = new SuggestUpdateController(
-                    config, getSuggestFieldInfoList(config, true));
+                    config, getSuggestFieldInfoList(config, true),
+                new SolrResourceLoader(SolrResourceLoader.locateSolrHome()));
             controller.start();
             final SolrInputDocument doc = new SolrInputDocument();
             doc.setField(
@@ -177,7 +180,7 @@ public class SuggestUpdateControllerTest extends TestCase {
             final SuggestUpdateConfig config = TestUtils
                     .getSuggestUpdateConfig();
             final SuggestUpdateController controller = new SuggestUpdateController(
-                    config, getSuggestFieldInfoList(config, false));
+                    config, getSuggestFieldInfoList(config, false), new SolrResourceLoader(SolrResourceLoader.locateSolrHome()));
             controller.start();
 
             final String prevDate = DateUtil.getThreadLocalDateFormat().format(
@@ -245,7 +248,8 @@ public class SuggestUpdateControllerTest extends TestCase {
             final SuggestUpdateConfig config = TestUtils
                     .getSuggestUpdateConfig();
             final SuggestUpdateController controller = new SuggestUpdateController(
-                    config, getSuggestFieldInfoList(config, false));
+                    config, getSuggestFieldInfoList(config, false),
+                new SolrResourceLoader(SolrResourceLoader.locateSolrHome()));
             controller.start();
 
             final SolrInputDocument doc = new SolrInputDocument();
@@ -301,7 +305,8 @@ public class SuggestUpdateControllerTest extends TestCase {
             final SuggestUpdateConfig config = TestUtils
                     .getSuggestUpdateConfig();
             final SuggestUpdateController controller = new SuggestUpdateController(
-                    config, getSuggestFieldInfoList(config, false));
+                    config, getSuggestFieldInfoList(config, false),
+                new SolrResourceLoader(SolrResourceLoader.locateSolrHome()));
             controller.addLabelFieldName("label");
             controller.addRoleFieldName("role");
             controller.start();
@@ -391,7 +396,8 @@ public class SuggestUpdateControllerTest extends TestCase {
             final SuggestUpdateConfig config = TestUtils
                     .getSuggestUpdateConfig();
             final SuggestUpdateController controller = new SuggestUpdateController(
-                    config, getSuggestFieldInfoList(config, false));
+                    config, getSuggestFieldInfoList(config, false),
+                new SolrResourceLoader(SolrResourceLoader.locateSolrHome()));
             controller.addLabelFieldName("label");
             controller.start();
 
