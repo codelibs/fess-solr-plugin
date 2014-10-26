@@ -259,7 +259,15 @@ public class SuggestUpdateController {
                         updateBadWord = true;
                         break;
                     case DELETE_BY_QUERY:
-                        indexUpdater.deleteByQuery(request.obj.toString());
+                        String deleteQuery = request.obj.toString();
+                        if(deleteQuery.indexOf(SuggestConstants.SuggestFieldNames.EXPIRES) == -1) {
+                            deleteQuery = deleteQuery + " NOT " +
+                                SuggestConstants.SuggestFieldNames.SEGMENT + ":" +
+                                SuggestConstants.SEGMENT_ELEVATE + " NOT " +
+                                SuggestConstants.SuggestFieldNames.SEGMENT + ":" +
+                                SuggestConstants.SEGMENT_QUERY;
+                        }
+                        indexUpdater.deleteByQuery(deleteQuery);
                         break;
                     default:
                         break;

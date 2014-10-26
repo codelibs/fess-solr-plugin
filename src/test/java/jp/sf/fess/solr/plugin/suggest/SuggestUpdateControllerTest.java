@@ -254,14 +254,14 @@ public class SuggestUpdateControllerTest extends TestCase {
 
             final SolrInputDocument doc = new SolrInputDocument();
             doc.setField("content", "りんご");
-            doc.setField(config.getSegmentField(), "1");
+            doc.setField(config.getSegmentField(), "1000");
             controller.add(doc);
             controller.commit();
             Thread.sleep(5 * 1000);
             assertTrue(suggestSolrServer.select("*:*").getNumFound() == 1);
             final SolrInputDocument doc2 = new SolrInputDocument();
             doc2.setField("content", "みかん");
-            doc2.setField(config.getSegmentField(), "2");
+            doc2.setField(config.getSegmentField(), "2000");
             controller.add(doc2);
             controller.commit();
             Thread.sleep(5 * 1000);
@@ -275,7 +275,7 @@ public class SuggestUpdateControllerTest extends TestCase {
                     SuggestConstants.SuggestFieldNames.READING + ":ringo")
                     .getNumFound() == 1);
 
-            controller.deleteByQuery(config.getSegmentField() + ":1");
+            controller.deleteByQuery(config.getSegmentField() + ":1000");
             controller.commit();
             Thread.sleep(5 * 1000);
 
