@@ -286,10 +286,10 @@ public class SuggestUpdateController {
 
         private Set<String> createBadWordSet() {
             Set<String> badWordSet = new HashSet<>();
-            try {
-                InputStream is = loader.openConfig(SuggestConstants.BADWORD_FILENAME);
-                BufferedReader br = new BufferedReader(new InputStreamReader(is));
-                String line;
+            String line;
+            try (BufferedReader br = new BufferedReader(new InputStreamReader(
+                    loader.openConfig(SuggestConstants.BADWORD_FILENAME),
+                    "UTF-8"))) {
                 while ((line = br.readLine()) != null) {
                     badWordSet.add(line.trim());
                 }
