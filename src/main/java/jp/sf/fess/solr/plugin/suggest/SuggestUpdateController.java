@@ -259,15 +259,18 @@ public class SuggestUpdateController {
                         updateBadWord = true;
                         break;
                     case DELETE_BY_QUERY:
-                        String deleteQuery = request.obj.toString();
-                        if(deleteQuery.indexOf(SuggestConstants.SuggestFieldNames.EXPIRES) == -1) {
-                            deleteQuery = deleteQuery + " NOT " +
-                                SuggestConstants.SuggestFieldNames.SEGMENT + ":" +
-                                SuggestConstants.SEGMENT_ELEVATE + " NOT " +
-                                SuggestConstants.SuggestFieldNames.SEGMENT + ":" +
-                                SuggestConstants.SEGMENT_QUERY;
+                        final String deleteQuery = request.obj.toString();
+                        if (deleteQuery
+                                .indexOf(SuggestConstants.SuggestFieldNames.EXPIRES) == -1) {
+                            indexUpdater.deleteByQuery(deleteQuery + " NOT "
+                                    + SuggestConstants.SuggestFieldNames.SEGMENT
+                                    + ":" + SuggestConstants.SEGMENT_ELEVATE
+                                    + " NOT "
+                                    + SuggestConstants.SuggestFieldNames.SEGMENT
+                                    + ":" + SuggestConstants.SEGMENT_QUERY);
+                        } else {
+                            indexUpdater.deleteByQuery(deleteQuery);
                         }
-                        indexUpdater.deleteByQuery(deleteQuery);
                         break;
                     default:
                         break;
@@ -285,9 +288,9 @@ public class SuggestUpdateController {
         }
 
         private Set<String> createBadWordSet() {
-            Set<String> badWordSet = new HashSet<>();
+            final Set<String> badWordSet = new HashSet<>();
             String line;
-            try (BufferedReader br = new BufferedReader(new InputStreamReader(
+            try (final BufferedReader br = new BufferedReader(new InputStreamReader(
                     loader.openConfig(SuggestConstants.BADWORD_FILENAME),
                     "UTF-8"))) {
                 while ((line = br.readLine()) != null) {
