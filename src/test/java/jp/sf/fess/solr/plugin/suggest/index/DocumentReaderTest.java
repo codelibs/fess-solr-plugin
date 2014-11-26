@@ -16,9 +16,7 @@
 
 package jp.sf.fess.solr.plugin.suggest.index;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
+import java.util.*;
 
 import jp.sf.fess.solr.plugin.suggest.TestUtils;
 import jp.sf.fess.suggest.converter.SuggestReadingConverter;
@@ -180,5 +178,75 @@ public class DocumentReaderTest extends TestCase {
             e.printStackTrace();
             fail(e.getMessage());
         }
+    }
+
+    public void test_ignoreBadWords() throws Exception {
+        final SolrInputDocument doc = new SolrInputDocument();
+        doc.setField("content", "検索エンジン");
+        doc.setField("content2", "隣の客はよく柿食う客だ");
+        final List<String> targetFieldList = new ArrayList<String>();
+        targetFieldList.add("content");
+        targetFieldList.add("content2");
+        final List<String> labelFieldList = new ArrayList<String>();
+        final List<String> roleFieldList = new ArrayList<String>();
+
+        final TokenizerFactory tokenizerFactory = TestUtils
+            .getTokenizerFactory(TestUtils.getSuggestUpdateConfig());
+        final SuggestReadingConverter suggestReadingConverter = TestUtils
+            .createConverter();
+        final SuggestNormalizer suggestNormalizer = TestUtils
+            .createNormalizer();
+
+        Set<String> badWords = new HashSet<>();
+        badWords.add("検索エンジン");
+        final DocumentReader reader = new DocumentReader(tokenizerFactory,
+            suggestReadingConverter, suggestNormalizer, doc,
+            targetFieldList, labelFieldList, roleFieldList, "", "", badWords);
+        SuggestItem item;
+        try {
+            int count = 0;
+            while ((item = reader.next()) != null) {
+                switch (count) {
+                    case 0:
+                        assertEquals("検索", item.getText());
+                        assertTrue(item.getReadingList().contains("kensaku"));
+                        assertTrue(item.getReadingList().contains("kennsaku"));
+                        assertEquals("content", item.getFieldNameList().get(0));
+                        break;
+                    case 1:
+                        assertEquals("エンジン", item.getText());
+                        assertTrue(item.getReadingList().contains("ennjinn"));
+                        assertTrue(item.getReadingList().contains("enjinn"));
+                        assertEquals("content", item.getFieldNameList().get(0));
+                        break;
+                    case 2:
+                        assertEquals("隣", item.getText());
+                        assertTrue(item.getReadingList().contains("tonari"));
+                        assertEquals("content2", item.getFieldNameList().get(0));
+                        break;
+                    case 3:
+                        assertEquals("客", item.getText());
+                        assertTrue(item.getReadingList().contains("kyaku"));
+                        assertEquals("content2", item.getFieldNameList().get(0));
+                        break;
+                    case 4:
+                        assertEquals("柿", item.getText());
+                        assertTrue(item.getReadingList().contains("kaki"));
+                        assertEquals("content2", item.getFieldNameList().get(0));
+                        break;
+                    case 5:
+                        assertEquals("客", item.getText());
+                        assertTrue(item.getReadingList().contains("kyaku"));
+                        assertEquals("content2", item.getFieldNameList().get(0));
+                        break;
+                }
+                count++;
+            }
+            assertEquals(6, count);
+        } catch (final Exception e) {
+            e.printStackTrace();
+            fail(e.getMessage());
+        }
+
     }
 }
