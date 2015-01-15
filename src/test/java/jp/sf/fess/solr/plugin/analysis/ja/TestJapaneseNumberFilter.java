@@ -57,7 +57,7 @@ public class TestJapaneseNumberFilter extends BaseTokenStreamTestCase {
         protected TokenStreamComponents createComponents(
                 final String fieldName, final Reader reader) {
             final Tokenizer tokenizer = new JapaneseTokenizer(reader, null,
-                    true, JapaneseTokenizer.Mode.SEARCH);
+                    false, JapaneseTokenizer.Mode.SEARCH);
             return new TokenStreamComponents(tokenizer,
                     new JapaneseNumberFilter(tokenizer));
         }
@@ -72,9 +72,9 @@ public class TestJapaneseNumberFilter extends BaseTokenStreamTestCase {
                 new int[] { 2, 8, 9, 10, 13, 14, 16, 17 });
 
         assertAnalyzesTo(analyzer, "昨日のお寿司は１０万円でした。", new String[] { "昨日", "の",
-                "お", "寿司", "は", "100000", "円", "でし", "た" }, new int[] { 0, 2,
-                3, 4, 6, 7, 10, 11, 13 }, new int[] { 2, 3, 4, 6, 7, 10, 11,
-                13, 14 });
+                "お", "寿司", "は", "100000", "円", "でし", "た", "。" }, new int[] { 0, 2,
+                3, 4, 6, 7, 10, 11, 13, 14 }, new int[] { 2, 3, 4, 6, 7, 10, 11,
+                13, 14, 15 });
 
         assertAnalyzesTo(analyzer, "アティリカの資本金は６００万円です", new String[] { "アティリカ",
                 "の", "資本", "金", "は", "6000000", "円", "です" }, new int[] { 0, 5,
@@ -176,11 +176,11 @@ public class TestJapaneseNumberFilter extends BaseTokenStreamTestCase {
                 new int[] { 0, 2 }, new int[] { 2, 4 }, new int[] { 1, 1 });
     }
 
-    /*@Test
+    @Test
     public void testDecimalPunctuation() throws IOException {
         // Test Arabic numbers with punctuation, i.e. 3.2 thousands
         assertAnalyzesTo(analyzer, "３.２千円", new String[] { "3200", "円" });
-    }*/
+    }
 
     @Test
     public void testThousandSeparator() throws IOException {
