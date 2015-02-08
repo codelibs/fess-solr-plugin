@@ -3,7 +3,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>jp.sf.fess</groupId>
 	<artifactId>fess-solr-plugin</artifactId>
-	<version>9.3.3</version>
+	<version>9.3.4-SNAPSHOT</version>
 	<packaging>jar</packaging>
 	<name>fess-solr-plugin</name>
 	<url>http://fess.codelibs.org/</url>
