@@ -326,7 +326,8 @@ public final class NGramSynonymTokenizer extends Tokenizer {
     }
 
     @Override
-    public void end() {
+    public final void end() throws IOException {
+        super.end();
         offsetAttr.setOffset(finalOffset, finalOffset);
     }
 
