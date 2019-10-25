@@ -415,7 +415,7 @@ public class SuggestUpdateController {
                                 final SolrInputDocument sdoc = (SolrInputDocument) entry
                                     .get(entry.size() - 1);
                                 if (logger.isDebugEnabled()) {
-                                    logger.debug("add " + sdoc);
+                                    logger.debug("add {}", sdoc);
                                 }
                                 listener.addCBK(sdoc);
                                 break;
@@ -423,7 +423,7 @@ public class SuggestUpdateController {
                             case UpdateLog.DELETE_BY_QUERY: {
                                 final String query = (String) entry.get(2);
                                 if (logger.isDebugEnabled()) {
-                                    logger.debug("deleteByQuery " + query);
+                                    logger.debug("deleteByQuery {}", query);
                                 }
                                 listener.deleteByQueryCBK(query);
                                 break;
